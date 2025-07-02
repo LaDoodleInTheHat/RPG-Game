@@ -26,8 +26,9 @@ Your ultimate goal is to clear Level-10 and claim the Dragon's Egg.
 
 👍
 
-On exit, prompt to save progress to JSON (using json + os + sys).
-On start, allow loading from an existing save file.
+On exit, prompt to save progress to JSON (using json + os + sys). 👍
+
+On start, allow loading from an existing save file. 👍
 
 
 3- Random Encounters
@@ -110,6 +111,10 @@ On start, allow loading from an existing save file.
     Victory: Reaching Level-11 (having cleared Level-10) and defeating the Dragon Lord grants the “Drago's Egg” artifact and ends the game.
 
     Defeat: Hero HP drops to 0 → show “Game Over,” offer to load a saved game.
+
+11 = One line Logic OLL
+
+    Must do this 👍
 """
 
 import time, random, math, os, sys, json, pygame as pg, pygwidgets as pgw
@@ -140,13 +145,94 @@ def spinner(duration, delay):
             time.sleep(delay)
         
 
-game = {
-  "level": int,            
-  "hp": int,               
-  "max_hp": int,           
-  "gold": int,            
-  "inventory": [],         
-  "weapons": [],           
-  "artifacts": [], 
-  "cheat_mode": bool
-}, 
+def init_new_game():
+    return {
+        "level": 1,            
+        "hp": 100,               
+        "max_hp": 100,           
+        "gold": 0,            
+        "inventory": [],         
+        "weapons": [
+            ["God Ray", 100000, 99999999999]
+        ],     
+        "equipped": 0,      
+        "artifacts": ["LaDoodle's Hat"], 
+        "cheat_mode": os.path.exists('cheat')
+    }
+
+
+def json_save(game):
+    file_name = input(f"\n{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip() + ".json"
+    try:
+        with open(file_name, 'w')as f:
+            json.dump(game, f)
+        print(f"{style.GREEN}Game saved to {file_name}{style.RESET}")
+    except Exception as e:
+        print(f"{style.RED}Unable to write file with error: {e}{style.RESET}")
+
+
+def json_load():
+    file_name = input(f"\n{style.BLUE}{style.BOLD}Load file name >>>{style.RESET} ").strip() + ".json"
+
+    try:
+        with open(file_name, 'r') as f:
+            game_state = json.load(f)
+
+            required_keys = {
+                "level": int,
+                "hp": int,
+                "max_hp": int,
+                "gold": int,
+                "inventory": list,
+                "weapons": list,
+                "equipped": int,
+                "artifacts": list,
+                "cheat_mode": bool
+            }
+
+            for key, expected_type in required_keys.items():
+                if key not in game_state:
+                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    return None
+                if not isinstance(game_state[key], expected_type):
+                    print(f"{style.RED}Error loading file, Invalid Format{style.RESET}")
+                    return None
+
+            for weapon in game_state["weapons"]:
+                if not (isinstance(weapon, list) and len(weapon) == 3 and
+                        isinstance(weapon[0], str) and
+                        isinstance(weapon[1], int) and
+                        isinstance(weapon[2], int)):
+                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    return None
+
+            if not all(isinstance(a, str) for a in game_state["artifacts"]):
+                print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                return None
+
+            for key, expected_type in required_keys.items():
+                if key not in game_state:
+                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    return None
+                if not isinstance(game_state[key], expected_type):
+                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    return None
+            print(f"\n{style.GREEN}Game loaded from {file_name}{style.RESET}")
+            print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
+            for key, value in game_state.items():
+                print(f"  {key}: {value}")
+            return game_state
+    except Exception as e:
+        print(f"{style.RED}Unable to read file with error: {e}{style.RESET}")
+
+def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    game = init_new_game()
+    print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.")
+    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? (Y/N) >>> {style.RESET}").strip()
+
+    game = json_load() if i == "Y" else init_new_game()
+
+    game = init_new_game() if not game else game
+
+main()
