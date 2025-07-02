@@ -142,8 +142,7 @@ def spinner(duration, delay):
     while time.time() - previous <= duration:
         for char in chars:
             print(f'     {char}', " "*10, end = '\r')
-            time.sleep(delay)
-        
+            time.sleep(delay)   
 
 def init_new_game():
     return {
@@ -159,7 +158,6 @@ def init_new_game():
         "artifacts": ["LaDoodle's Hat"], 
         "cheat_mode": os.path.exists('cheat')
     }
-
 
 def json_save(game):
     file_name = input(f"\n{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip() + ".json"
