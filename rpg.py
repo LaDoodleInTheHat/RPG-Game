@@ -190,6 +190,7 @@ def json_load():
                 "cheat_mode": bool
             }
 
+            # check for general formatting in required_keys {...}
             for key, expected_type in required_keys.items():
                 if key not in game_state:
                     print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
@@ -198,29 +199,30 @@ def json_load():
                     print(f"{style.RED}Error loading file, Invalid Format{style.RESET}")
                     return None
 
+            # check for weapons format
             for weapon in game_state["weapons"]:
                 if not (isinstance(weapon, list) and len(weapon) == 3 and
                         isinstance(weapon[0], str) and
                         isinstance(weapon[1], int) and
-                        isinstance(weapon[2], int)):
+                        isinstance(weapon[2], int) and
+                        weapon[1] > 0 and
+                        weapon[2] > 0 and
+                        weapon[2] > weapon[1]):
                     print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
                     return None
 
+            # check for artifacts format (all str)
             if not all(isinstance(a, str) for a in game_state["artifacts"]):
+
                 print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
                 return None
 
-            for key, expected_type in required_keys.items():
-                if key not in game_state:
-                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
-                    return None
-                if not isinstance(game_state[key], expected_type):
-                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
-                    return None
+            # print gamestate from json file
             print(f"\n{style.GREEN}Game loaded from {file_name}{style.RESET}")
             print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
             for key, value in game_state.items():
                 print(f"  {key}: {value}")
+            
             return game_state
     except Exception as e:
         print(f"{style.RED}Unable to read file with error: {e}{style.RESET}")
@@ -231,8 +233,6 @@ def main():
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.")
     i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? (Y/N) >>> {style.RESET}").strip()
 
-    game = json_load() if i == "Y" else init_new_game()
-
-    game = init_new_game() if not game else game
+    game = json_load() if i == "Y" else init_new_game(); game = init_new_game() if game == None else game
 
 main()
