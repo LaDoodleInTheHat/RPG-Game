@@ -110,14 +110,14 @@ On start, allow loading from an existing save file. 👍
 
     Victory: Reaching Level-11 (having cleared Level-10) and defeating the Dragon Lord grants the “Drago's Egg” artifact and ends the game.
 
-    Defeat: Hero HP drops to 0 → show “Game Over,” offer to load a saved game.
+    Defeat: Hero HP drops to 0 → show “Game Over” you have to make press play again.
 
-11 = One line Logic OLL
+11 - One line Logic (OLL)
 
     Must do this 👍
 """
 
-import time, random, math, os, sys, json, pygame as pg, pygwidgets as pgw
+import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
 
 class style():
     BLACK = '\033[30m'
@@ -170,7 +170,7 @@ def json_save(game):
 
 
 def json_load():
-    file_name = input(f"\n{style.BLUE}{style.BOLD}Load file name >>>{style.RESET} ").strip() + ".json"
+    file_name = input(f"{style.BLUE}{style.BOLD} Load file name >>>{style.RESET} ").strip() + ".json"
 
     try:
         with open(file_name, 'r') as f:
@@ -225,12 +225,41 @@ def json_load():
     except Exception as e:
         print(f"{style.RED}Unable to read file with error: {e}{style.RESET}")
 
+def check_game_over(game):
+    if game["level"] == 11:
+        print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS! {style.RESET}{style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg")
+        return "won"
+    elif game["hp"] == 0: return "lose"
+
+
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     game = init_new_game()
-    print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.")
-    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? (Y/N) >>> {style.RESET}").strip()
+    print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
+    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip()
 
     game = json_load() if i == "Y" else init_new_game(); game = init_new_game() if game == None else game
+
+    while True:
+        select = input(f" {style.BOLD}{style.BLUE}>>>{style.RESET} ")
+        """ >>> 
+        explore (or e) - descend to the next level and trigger encounter
+
+        status (or s) - show current HP, level, gold, inventory, equipped weapon
+
+        shop (or sh) - open the shop
+
+        use ( or u) - use a potion or scroll from inventory
+
+        equip (or eq) - equip a weapon from your arsenal
+
+        save - force save game to JSON
+
+        load - load from existing save file
+
+        help (or h) - list all commands
+
+        quit - exit (prompt to save) :
+        """
 
 main()
