@@ -26,7 +26,7 @@ Your ultimate goal is to clear Level-10 and claim the Dragon's Egg.
 
 👍
 
-On exit, prompt to save progress to JSON (using json + os + sys). 👍
+On exit, prompt to save progress to JSON (using json + os + sys). 👍 (make overwrite feature later maybe)
 
 On start, allow loading from an existing save file. 👍
 
@@ -118,6 +118,7 @@ On start, allow loading from an existing save file. 👍
 """
 
 import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
+from pathlib import Path
 
 class style():
     BLACK = '\033[30m'
@@ -160,14 +161,43 @@ def init_new_game():
     }
 
 def json_save(game):
-    file_name = input(f"\n{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip() + ".json"
+
+    file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
+    file_name = file_name if file_name.endswith(".json") else file_name+".json"
+
+    if os.path.exists(file_name) or file_name == '':
+        print(f' {style.RED} > Invalid filename (either it already exists or blank) try again')
+        json_save(game)
+        return
     try:
         with open(file_name, 'w')as f:
             json.dump(game, f)
-        print(f"{style.GREEN}Game saved to {file_name}{style.RESET}")
+        print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
     except Exception as e:
-        print(f"{style.RED}Unable to write file with error: {e}{style.RESET}")
+        print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
 
+
+# def json_save(game):
+#     file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
+#     if not file_name :
+#         print("No filename entered, aborting save.")
+#         return
+    
+#     file_path = Path(file_name if file_name.endswith(".json") else file_name+".json")
+
+#     if file_path.exists():
+#         ask = input("File already exists.Overwirte? [Y/N]").upper()
+#         if ask not in ("Y", "YES"):
+#             print("Save cancelled. File not overwritten.")
+#             return
+        
+#     try:
+#         with file_path.open("w") as f:
+#             json.dump(game, f, indent=2)
+
+#         print(f"Game saved to {file_path}")
+#     except Exception as e:
+#         print(f"Unable to write {e}")
 
 def json_load():
     file_name = input(f"{style.BLUE}{style.BOLD} Load file name >>>{style.RESET} ").strip() + ".json"
@@ -191,10 +221,10 @@ def json_load():
             # check for general formatting in required_keys {...}
             for key, expected_type in required_keys.items():
                 if key not in game_state:
-                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                     return None
                 if not isinstance(game_state[key], expected_type):
-                    print(f"{style.RED}Error loading file, Invalid Format{style.RESET}")
+                    print(f"{style.RED} > Error loading file, Invalid Format{style.RESET}")
                     return None
 
             # check for weapons format
@@ -206,13 +236,13 @@ def json_load():
                         weapon[1] > 0 and
                         weapon[2] > 0 and
                         weapon[2] > weapon[1]):
-                    print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                    print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                     return None
 
             # check for artifacts format (all str)
             if not all(isinstance(a, str) for a in game_state["artifacts"]):
 
-                print(f"{style.RED}Error loading file, Invalid format{style.RESET}")
+                print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                 return None
 
             # print gamestate from json file
@@ -241,25 +271,38 @@ def main():
     game = json_load() if i == "Y" else init_new_game(); game = init_new_game() if game == None else game
 
     while True:
-        select = input(f" {style.BOLD}{style.BLUE}>>>{style.RESET} ")
-        """ >>> 
-        explore (or e) - descend to the next level and trigger encounter
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-        status (or s) - show current HP, level, gold, inventory, equipped weapon
+        s = input(f" {style.BOLD}{style.BLUE}>>>{style.RESET} ")
 
-        shop (or sh) - open the shop
+        if s in ["help", "h"]:
+            print(f"""{style.BOLD}explore (or e) - descend to the next level and trigger encounter
+            status (or s) - show current HP, level, gold, inventory, equipped weapon
+            shop (or sh) - open the shop
+            use ( or u) - use a potion or scroll from inventory
+            equip (or eq) - equip a weapon from your arsenal
+            save - force save game to JSON
+            load - load from existing save file
+            help (or h) - list all commands
+            quit (or q) to prompt save and exit
+            
+            {style.RESET}""")
+        elif s in ["quit", "q"]:
+            s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
+            print()
+            if s[0] == 'Y':json_save(game)
+            
+            print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
 
-        use ( or u) - use a potion or scroll from inventory
+            time.sleep(7)
+            os.system('cls' if os.name == 'nt' else 'clear')
 
-        equip (or eq) - equip a weapon from your arsenal
+            return
 
-        save - force save game to JSON
-
-        load - load from existing save file
-
-        help (or h) - list all commands
-
-        quit - exit (prompt to save) :
-        """
+        else:
+            print(f"{style.RED}> Invalid command, type help (or h) to list possible commands")
+        
+        
+        time.sleep(1)
 
 main()
