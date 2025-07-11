@@ -34,11 +34,11 @@ On start, allow loading from an existing save file. 👍
 3- Random Encounters
     Each level triggers one of:
 
-        Monster Fight (70%): random monster with name, HP, reward gold.
+        Monster Fight (79%): random monster with name, HP, reward gold.
 
         Treasure Chest (20%): random gold amount or random item drop.
 
-        Shopkeeper (10%): opportunity to buy potions/tools before proceeding.
+        Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding.
 
 4- Battle System
 
@@ -143,7 +143,9 @@ def spinner(duration, delay):
     while time.time() - previous <= duration:
         for char in chars:
             print(f'     {char}', " "*10, end = '\r')
-            time.sleep(delay)   
+            time.sleep(delay)  
+
+    print(style.CLEAR_LINE) 
 
 def init_new_game():
     return {
@@ -153,7 +155,7 @@ def init_new_game():
         "gold": 0,            
         "inventory": [],         
         "weapons": [
-            ["God Ray", 100000, 99999999999]
+            ["Fists", 10, 20]
         ],     
         "equipped": 0,      
         "artifacts": ["LaDoodle's Hat"], 
@@ -176,28 +178,12 @@ def json_save(game):
     except Exception as e:
         print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
 
-
-# def json_save(game):
-#     file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
-#     if not file_name :
-#         print("No filename entered, aborting save.")
-#         return
-    
-#     file_path = Path(file_name if file_name.endswith(".json") else file_name+".json")
-
-#     if file_path.exists():
-#         ask = input("File already exists.Overwirte? [Y/N]").upper()
-#         if ask not in ("Y", "YES"):
-#             print("Save cancelled. File not overwritten.")
-#             return
-        
-#     try:
-#         with file_path.open("w") as f:
-#             json.dump(game, f, indent=2)
-
-#         print(f"Game saved to {file_path}")
-#     except Exception as e:
-#         print(f"Unable to write {e}")
+def typewriter(text, color=style.RESET):
+    for c in text:
+        print(f"{color}{c}{style.RESET}", end='', flush=True)
+        time.sleep(0.02)
+    print()
+    time.sleep(0.5)
 
 def json_load():
     file_name = input(f"{style.BLUE}{style.BOLD} Load file name >>>{style.RESET} ").strip() + ".json"
@@ -250,23 +236,96 @@ def json_load():
             print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
             for key, value in game_state.items():
                 print(f"  {key}: {value}")
-            
+                time.sleep(0.1)
+
+            time.sleep(5)
+
             return game_state
     except Exception as e:
-        print(f"{style.RED}Unable to read file with error: {e}{style.RESET}")
+        print(f"{style.RED} > Unable to read file with error: {e}{style.RESET}")
+        time.sleep(2)
 
 def check_game_over(game):
-    if game["level"] == 11:
-        print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS! {style.RESET}{style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg")
-        return "won"
-    elif game["hp"] == 0: return "lose"
+    if game["hp"] <= 0:
+        print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
+        return "lost"
+    elif game["level"] == 11:
+        print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
+        game["artifacts"].append("Drago's Egg")
 
+        return "won"
+    else:
+        return "none"
+    
+def random_encounter(game):
+    spinner(1, 0.1)
+
+    # Format: [name, hp, damage, reward, chance]
+    monsters = [
+        ["VENOM DRAKE", 110, 35, 70, 47],    # 47% - Easiest, lowest reward
+        ["NIGHT STALKER", 130, 45, 90, 67],  # 20% - Tougher, better reward
+        ["CRYPT LICH", 170, 60, 120, 79],    # 12% - Harder, higher reward
+        ["STONE GOLEM", 220, 80, 160, 88],   # 9% - Very tough, big reward
+        ["VOID SHADE", 260, 100, 200, 94],   # 6% - Deadly, huge reward
+        ["GORM", 320, 130, 300, 99],         # 5% - Brutal, massive reward
+        ["BLADE PHANTOM", 400, 180, 500, 100], # 1% - Insane, legendary reward
+    ]
+
+    i = r.randint(0, 100)
+    if i <= 89:
+        i = r.randint(0, 100)
+        for monster in monsters:
+            if i <= monster[4]:
+                typewriter(f"{monster[0]} appeared!", style.RED)
+                player_weapon = game["weapons"][game["equipped"]]
+                typewriter(f"{monster[0]} has {monster[1]} HP!", style.YELLOW)
+                typewriter(f"You ready your {player_weapon[0]}!", style.YELLOW)
+
+                time.sleep(1)
+                # Monster fight logic
+                
+                monster_hp = monster[1]
+                monster_name = monster[0]
+                monster_damage = monster[2]
+                reward_gold = monster[3]
+
+                while monster_hp > 0 and game["hp"] > 0:
+                    qu = input("Press Enter to attack!")
+                    dmg = r.randint(player_weapon[1], player_weapon[2])
+                    mdmg = r.randint(int(monster_damage*0.7), monster_damage)
+
+                    my_attack = f"You attack {monster_name} for {dmg} damage!"
+                    monster_hp -= dmg
+
+                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                    game["hp"] -= mdmg
+
+                    hp_line = f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}"
+    
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    typewriter(my_attack, style.GREEN)
+                    typewriter(his_attack, style.RED)
+                    typewriter(hp_line, style.YELLOW)
+                    time.sleep(2)
+
+                if monster_hp <= 0:
+                    typewriter(f"{monster_name} is defeated!", style.MAGENTA)
+                    typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
+                    typewriter(f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}", style.YELLOW)
+                    game["gold"] += reward_gold
+                
+                return game
+                
+    elif i <= 99:
+        return print("chest")
+    elif i <= 100:
+        return print("buffed keeper")
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     game = init_new_game()
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
-    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip()
+    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
     game = json_load() if i == "Y" else init_new_game(); game = init_new_game() if game == None else game
 
@@ -289,7 +348,6 @@ def main():
             {style.RESET}""")
         elif s in ["quit", "q"]:
             s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
-            print()
             if s[0] == 'Y':json_save(game)
             
             print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
@@ -298,10 +356,38 @@ def main():
             os.system('cls' if os.name == 'nt' else 'clear')
 
             return
-
+        elif s in ["die"] and game["cheat_mode"]:
+            print(f"{style.RED} > You have chosen to commit suicide. Game over!{style.RESET}")
+            game["hp"] = 0
+        elif s in ["win"] and game["cheat_mode"]:
+            print(f"\n {style.GREEN}> Win{style.RESET}")
+            game["level"] = 11
+        elif s in ["save"]:
+            json_save()
+        elif s in ["load"]:
+            json_load()
+        elif s in ["explore", "e"]:
+            game = random_encounter(game)
+        elif s in ["status", "s"]:
+            print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
+            for key, value in game.items():
+                print(f"  {key}: {value}")
+                time.sleep(0.1)
+            time.sleep(5)
+        elif s in ["shop", "sh"]:
+            pass
+        elif s in ["use", "u"]:
+            pass
+        elif s in ["equip", "eq"]:
+            pass
         else:
-            print(f"{style.RED}> Invalid command, type help (or h) to list possible commands")
+            print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
+
+        g = check_game_over(game); g = False if g == "none" else True
         
+        if g:
+            time.sleep(7)
+            return os.system('cls' if os.name == 'nt' else 'clear')
         
         time.sleep(1)
 
