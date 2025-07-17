@@ -262,18 +262,39 @@ def random_encounter(game):
 
     # Format: [name, hp, damage, reward, chance]
     monsters = [
-        ["VENOM DRAKE", 110, 35, 70, 47],    # 47% - Easiest, lowest reward
-        ["NIGHT STALKER", 130, 45, 90, 67],  # 20% - Tougher, better reward
-        ["CRYPT LICH", 170, 60, 120, 79],    # 12% - Harder, higher reward
-        ["STONE GOLEM", 220, 80, 160, 88],   # 9% - Very tough, big reward
-        ["VOID SHADE", 260, 100, 200, 94],   # 6% - Deadly, huge reward
-        ["GORM", 320, 130, 300, 99],         # 5% - Brutal, massive reward
-        ["BLADE PHANTOM", 400, 180, 500, 100], # 1% - Insane, legendary reward
+        ["VENOM DRAKE", 110, 35, 70, 180],
+        ["NIGHT STALKER", 130, 45, 90, 340],
+        ["CRYPT LICH", 170, 60, 120, 520],
+        ["STONE GOLEM", 220, 80, 160, 700],
+        ["VOID SHADE", 260, 100, 200, 850],
+        ["GORM", 320, 130, 300, 950],
+        ["BLADE PHANTOM", 400, 180, 500, 1000],
     ]
 
+    # Adjust monster chances based on level: higher level = higher chance for tough monsters
+    level = game.get("level", 1)
+    # Calculate a shift: at level 1, bias is 0; at level 10, bias is strong
+    bias = min(max(level - 1, 0), 9)  # 0 to 9
+
+    # Shift the "chance" thresholds down for easier monsters, up for harder ones
+    # We'll subtract bias from each easy monster's chance, and add to hard ones
+    # This makes it more likely to get harder monsters at higher levels
+    adjusted_monsters = []
+    for idx, m in enumerate(monsters):
+        # The later the monster in the list, the more bias it gets
+        # Early monsters lose chance, late monsters gain chance
+        if idx < len(monsters)//2:
+            # Easier monsters: reduce their chance threshold
+            new_chance = max(m[4] - bias*2, 0)
+        else:
+            # Harder monsters: increase their chance threshold
+            new_chance = min(m[4] + bias*2, 1000)
+        adjusted_monsters.append([m[0], m[1], m[2], m[3], new_chance])
+    monsters = adjusted_monsters
+
     i = r.randint(0, 100)
-    if i <= 89:
-        i = r.randint(0, 100)
+    if i <= 79:
+        i = r.randint(0, 1000)
         for monster in monsters:
             if i <= monster[4]:
                 typewriter(f"{monster[0]} appeared!", style.RED)
@@ -290,34 +311,91 @@ def random_encounter(game):
                 reward_gold = monster[3]
 
                 while monster_hp > 0 and game["hp"] > 0:
-                    qu = input("Press Enter to attack!")
+                    qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
+                    print()
                     dmg = r.randint(player_weapon[1], player_weapon[2])
                     mdmg = r.randint(int(monster_damage*0.7), monster_damage)
+                    os.system('cls' if os.name == 'nt' else 'clear')
 
-                    my_attack = f"You attack {monster_name} for {dmg} damage!"
-                    monster_hp -= dmg
+                    if qu == "run":
+                        if r.randint(1, 100) <= 100:
+                            typewriter("You successfully ran away!", style.GREEN)
+                            return game
+                        else:
+                            typewriter("You failed to escape!", style.RED)
 
-                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
-                    game["hp"] -= mdmg
+
+                            if monster_hp > 0:
+                                his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                                game["hp"] -= mdmg
+                                typewriter(his_attack, style.RED)
+
+                    elif qu == "attack":
+                        my_attack = f"You attack {monster_name} for {dmg} damage!"
+                        monster_hp -= dmg
+
+                        typewriter(my_attack, style.GREEN)
+                        if monster_hp > 0:
+                            his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                            game["hp"] -= mdmg
+                            typewriter(his_attack, style.RED)
+
+                    elif qu == "counter":
+                        if r.randint(1, 100) <= 50:
+                            his_attack = f"{monster_name} tried to strike you, but failed!"
+                            dmg = r.randint(max(dmg, mdmg)-min(dmg, mdmg), (max(dmg, mdmg)-min(dmg, mdmg))*2)
+                            my_attack = f"You counter {monster_name}'s attack for {dmg}!"
+                            monster_hp -= dmg
+                            typewriter(his_attack, style.GREEN)
+                            typewriter(my_attack, style.GREEN)
+                        else:
+                            typewriter("Your counter failed!", style.RED)
+                            if monster_hp > 0:
+                                his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                                game["hp"] -= mdmg
+                                typewriter(his_attack, style.RED)
 
                     hp_line = f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}"
-    
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    typewriter(my_attack, style.GREEN)
-                    typewriter(his_attack, style.RED)
                     typewriter(hp_line, style.YELLOW)
+
                     time.sleep(2)
 
                 if monster_hp <= 0:
                     typewriter(f"{monster_name} is defeated!", style.MAGENTA)
                     typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
-                    typewriter(f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}", style.YELLOW)
                     game["gold"] += reward_gold
-                
-                return game
-                
+
+                time.sleep(3)
+                return game           
     elif i <= 99:
-        return print("chest")
+        # Treasure Chest Encounter
+        typewriter("You found a mysterious treasure chest!", style.YELLOW)
+        spinner(1, 0.1)
+        reward_type = r.choices(["gold", "item"], weights=[70, 30])[0]
+        if reward_type == "gold":
+            gold_found = r.randint(30, 120) + game["level"] * 5
+            typewriter(f"You open the chest and find {gold_found} gold!", style.GREEN)
+            game["gold"] += gold_found
+        else:
+            items = [
+                "Small Health Potion",
+                "Magic Scroll",
+                "Secret Map",
+                "Iron Sword"
+            ]
+            item = r.choice(items)
+            if item == "Iron Sword":
+                # Only add if not already owned
+                if not any(w[0] == "Iron Sword" for w in game["weapons"]):
+                    game["weapons"].append(["Iron Sword", 5, 10])
+                    typewriter("You found an Iron Sword! (Damage 5-10)", style.CYAN)
+                else:
+                    typewriter("You found an Iron Sword, but you already have one. You sell it for 50 gold.", style.YELLOW)
+                    game["gold"] += 50
+            else:
+                game["inventory"].append(item)
+                typewriter(f"You found a {item}!", style.CYAN)
+        return game
     elif i <= 100:
         return print("buffed keeper")
 
@@ -327,7 +405,7 @@ def main():
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
     i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
-    game = json_load() if i == "Y" else init_new_game(); game = init_new_game() if game == None else game
+    game = json_load() if i == "Y" else init_new_game()
 
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -335,17 +413,18 @@ def main():
         s = input(f" {style.BOLD}{style.BLUE}>>>{style.RESET} ")
 
         if s in ["help", "h"]:
-            print(f"""{style.BOLD}explore (or e) - descend to the next level and trigger encounter
-            status (or s) - show current HP, level, gold, inventory, equipped weapon
-            shop (or sh) - open the shop
-            use ( or u) - use a potion or scroll from inventory
-            equip (or eq) - equip a weapon from your arsenal
-            save - force save game to JSON
-            load - load from existing save file
-            help (or h) - list all commands
-            quit (or q) to prompt save and exit
-            
-            {style.RESET}""")
+            print(f"""  
+    explore (or e) - descend to the next level and trigger encounter
+    status (or s) - show current HP, level, gold, inventory, equipped weapon
+    shop (or sh) - open the shop
+    use ( or u) - use a potion or scroll from inventory
+    equip (or eq) - equip a weapon from your arsenal
+    save - force save game to JSON
+    load - load from existing save file
+    help (or h) - list all commands
+    quit (or q) to prompt save and exit
+      {style.RESET}""")
+            time.sleep(5)
         elif s in ["quit", "q"]:
             s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
             if s[0] == 'Y':json_save(game)
@@ -391,4 +470,5 @@ def main():
         
         time.sleep(1)
 
-main()
+if __name__ == "__main__":
+    main()
