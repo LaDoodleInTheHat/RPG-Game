@@ -34,13 +34,13 @@ On start, allow loading from an existing save file. 👍
 3- Random Encounters
     Each level triggers one of:
 
-        Monster Fight (79%): random monster with name, HP, reward gold.
+        Monster Fight (79%): random monster with name, HP, reward gold. 
 
         Treasure Chest (20%): random gold amount or random item drop.
 
         Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding.
 
-4- Battle System
+4- Battle System - one feature left 👍
 
     When fighting:
 
@@ -120,6 +120,7 @@ On start, allow loading from an existing save file. 👍
 import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
 from pathlib import Path
 
+#This adds styles that is used in the terminal
 class style():
     BLACK = '\033[30m'
     RED = '\033[31m'
@@ -133,6 +134,7 @@ class style():
     RESET = '\033[0m'
     BOLD = '\033[1m'
     CLEAR_LINE = '\033[2K'
+
 
 def spinner(duration, delay):
 
@@ -270,27 +272,34 @@ def random_encounter(game):
         ["GORM", 320, 130, 300, 950],
         ["BLADE PHANTOM", 400, 180, 500, 1000],
     ]
+    
+    """
+    Easy monsters , venom, night, crypt
+    Hard monsters, everything else
+
+    I want easy monsters to appear more frequently than harder monsters when your level is low
+    and vise versa
+    
+    """
 
     # Adjust monster chances based on level: higher level = higher chance for tough monsters
-    level = game.get("level", 1)
+    level = game["level"]
     # Calculate a shift: at level 1, bias is 0; at level 10, bias is strong
     bias = min(max(level - 1, 0), 9)  # 0 to 9
 
-    # Shift the "chance" thresholds down for easier monsters, up for harder ones
-    # We'll subtract bias from each easy monster's chance, and add to hard ones
-    # This makes it more likely to get harder monsters at higher levels
-    adjusted_monsters = []
-    for idx, m in enumerate(monsters):
-        # The later the monster in the list, the more bias it gets
-        # Early monsters lose chance, late monsters gain chance
-        if idx < len(monsters)//2:
-            # Easier monsters: reduce their chance threshold
-            new_chance = max(m[4] - bias*2, 0)
-        else:
-            # Harder monsters: increase their chance threshold
-            new_chance = min(m[4] + bias*2, 1000)
-        adjusted_monsters.append([m[0], m[1], m[2], m[3], new_chance])
-    monsters = adjusted_monsters
+    half = len(monsters)//2
+    bias_shift = bias*2
+    new_monsters = []
+    
+    for i, (name, hp, damage, reward, chance) in enumerate(monsters):
+        shift = bias_shift if i >= half else - bias_shift # easy monsters will get negative shift and diff monster positive shift
+        new_chance = max(0,min(1000, chance + shift))  
+        new_monsters.append([name, hp, damage, reward, new_chance])
+    
+    monsters = new_monsters
+
+    print(monsters)
+    time.sleep(10)
 
     i = r.randint(0, 100)
     if i <= 79:
@@ -354,6 +363,12 @@ def random_encounter(game):
                                 his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
                                 typewriter(his_attack, style.RED)
+                    elif qu == "useItem":
+                        if game["inventory"]:
+                            item = game["inventory"][0]
+                            typewriter(f"You used a {item}!", style.GREEN)
+                        else:
+                            typewriter("You have no items to use!", style.RED)
 
                     hp_line = f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}"
                     typewriter(hp_line, style.YELLOW)
@@ -365,6 +380,7 @@ def random_encounter(game):
                     typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
                     game["gold"] += reward_gold
 
+                print(game)
                 time.sleep(3)
                 return game           
     elif i <= 99:
@@ -397,7 +413,8 @@ def random_encounter(game):
                 typewriter(f"You found a {item}!", style.CYAN)
         return game
     elif i <= 100:
-        return print("buffed keeper")
+        typewriter("You have encountered a Buffed Shopkeeper, buy an op item with your gold!", style.YELLOW)
+        return game
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -462,13 +479,15 @@ def main():
         else:
             print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
+
+        print(game)
         g = check_game_over(game); g = False if g == "none" else True
         
         if g:
             time.sleep(7)
             return os.system('cls' if os.name == 'nt' else 'clear')
         
-        time.sleep(1)
+        time.sleep(10)
 
 if __name__ == "__main__":
     main()
