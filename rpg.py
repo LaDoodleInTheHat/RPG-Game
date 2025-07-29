@@ -272,15 +272,6 @@ def random_encounter(game):
         ["GORM", 320, 130, 300, 950],
         ["BLADE PHANTOM", 400, 180, 500, 1000],
     ]
-    
-    """
-    Easy monsters , venom, night, crypt
-    Hard monsters, everything else
-
-    I want easy monsters to appear more frequently than harder monsters when your level is low
-    and vise versa
-    
-    """
 
     # Adjust monster chances based on level: higher level = higher chance for tough monsters
     level = game["level"]
@@ -380,7 +371,6 @@ def random_encounter(game):
                     typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
                     game["gold"] += reward_gold
 
-                print(game)
                 time.sleep(3)
                 return game           
     elif i <= 99:
@@ -395,10 +385,38 @@ def random_encounter(game):
         else:
             items = [
                 "Small Health Potion",
+                "Large Health Potion",
                 "Magic Scroll",
                 "Secret Map",
-                "Iron Sword"
+                "Iron Sword",
+                "Steel Axe",
+                "Enchanted Dagger",
+                "Phoenix Feather",
+                "Elixir of Fortitude",
+                "Mystic Cloak",
+                "Thunder Hammer",
+                "Shadow Amulet"
             ]
+
+            # Weapons and their damage ranges
+            weapon_stats = {
+                "Iron Sword": [5, 10],
+                "Steel Axe": [8, 16],
+                "Enchanted Dagger": [4, 14],
+                "Thunder Hammer": [12, 22]
+            }
+
+            if item in weapon_stats:
+                # Only add if not already owned
+                if not any(w[0] == item for w in game["weapons"]):
+                    game["weapons"].append([item, weapon_stats[item][0], weapon_stats[item][1]])
+                    typewriter(f"You found a {item}! (Damage {weapon_stats[item][0]}-{weapon_stats[item][1]})", style.CYAN)
+                else:
+                    typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
+                    game["gold"] += 50
+            else:
+                game["inventory"].append(item)
+                typewriter(f"You found a {item}!", style.CYAN)
             item = r.choice(items)
             if item == "Iron Sword":
                 # Only add if not already owned
@@ -480,20 +498,14 @@ def main():
             print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
 
-        print(game)
         g = check_game_over(game); g = False if g == "none" else True
         
         if g:
             time.sleep(7)
             return os.system('cls' if os.name == 'nt' else 'clear')
         
-        time.sleep(10)
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
 
