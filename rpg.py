@@ -31,7 +31,7 @@ On exit, prompt to save progress to JSON (using json + os + sys). 👍 (make ove
 On start, allow loading from an existing save file. 👍
 
 
-3- Random Encounters
+3- Random Encounters 👍
     Each level triggers one of:
 
         Monster Fight (79%): random monster with name, HP, reward gold. 
@@ -54,13 +54,13 @@ On start, allow loading from an existing save file. 👍
 
     If monster dies → award gold, maybe drop an item.
 
-5- Inventory & Equipment
+5- Inventory & Equipment 👍
 
     Equip one weapon at a time from weapons list.
 
     Weapons have a name and damage range stored in parallel lists (no dicts!).
 
-    Potions in inventory can heal a fixed amount when used.
+    Potions in inventory can heal a fixed amount when used. 🚫📋‼️‼️‼️‼️‼️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
 
 6- Shop System
 
@@ -84,7 +84,7 @@ On start, allow loading from an existing save file. 👍
     On odd levels, increase monster difficulty; on even levels, offer treasure rooms.
 
 
-8- Cheat Mode
+8- Cheat Mode 👍
     If a file named invincibility.txt exists, automatically unlock a hidden command cheat allowing you to set any game parameter (HP, gold, level).
 
 9- Commands and Help
@@ -289,9 +289,6 @@ def random_encounter(game):
     
     monsters = new_monsters
 
-    print(monsters)
-    time.sleep(10)
-
     i = r.randint(0, 100)
     if i <= 79:
         i = r.randint(0, 1000)
@@ -398,41 +395,65 @@ def random_encounter(game):
                 "Shadow Amulet"
             ]
 
-            # Weapons and their damage ranges
-            weapon_stats = {
-                "Iron Sword": [5, 10],
-                "Steel Axe": [8, 16],
-                "Enchanted Dagger": [4, 14],
-                "Thunder Hammer": [12, 22]
-            }
+            # Weapons and their damage ranges, format - weapon name, min damage, max damage
+            weapon_stats = [
+                ["Iron Sword", 5, 10],
+                ["Steel Axe", 8, 16],
+                ["Enchanted Dagger", 4, 14],
+                ["(Totally) Mjölnir", 100, 220]
+            ]
+
+            item = r.choice(items)
+
 
             if item in weapon_stats:
                 # Only add if not already owned
-                if not any(w[0] == item for w in game["weapons"]):
-                    game["weapons"].append([item, weapon_stats[item][0], weapon_stats[item][1]])
-                    typewriter(f"You found a {item}! (Damage {weapon_stats[item][0]}-{weapon_stats[item][1]})", style.CYAN)
+                if not item in game["weapons"]:
+                    game["weapons"].append(item)
+                    typewriter(f"You found a {item}! (Damage {item[1]}-{item[2]})", style.CYAN)
                 else:
                     typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
                     game["gold"] += 50
             else:
                 game["inventory"].append(item)
                 typewriter(f"You found a {item}!", style.CYAN)
-            item = r.choice(items)
-            if item == "Iron Sword":
-                # Only add if not already owned
-                if not any(w[0] == "Iron Sword" for w in game["weapons"]):
-                    game["weapons"].append(["Iron Sword", 5, 10])
-                    typewriter("You found an Iron Sword! (Damage 5-10)", style.CYAN)
-                else:
-                    typewriter("You found an Iron Sword, but you already have one. You sell it for 50 gold.", style.YELLOW)
-                    game["gold"] += 50
-            else:
-                game["inventory"].append(item)
-                typewriter(f"You found a {item}!", style.CYAN)
+            
+        
         return game
     elif i <= 100:
         typewriter("You have encountered a Buffed Shopkeeper, buy an op item with your gold!", style.YELLOW)
         return game
+    
+def equip(game):
+    print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
+
+    for weapon in game["weapons"]:
+        print(f"\n    {game['weapons'].index(weapon) + 1}: {weapon[0]} {weapon[1]} - {weapon[2]} dmg")
+        time.sleep(0.1)
+    
+    try:
+        game["equipped"] = int(input("\nChoose a weapon number >>> "))-1
+    except Exception as e:
+        print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
+
+    typewriter(f"{style.YELLOW}You have equipped the {style.UNDERLINE}{style.BOLD}{game["weapons"][game["equipped"]]}")
+
+def status(game):
+    print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
+    for key, value in game.items():
+        print(f"  {key}: {value}")
+        time.sleep(0.1)
+    time.sleep(5)
+
+def  quit_game(game):
+    s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
+    if s[0] == 'Y':json_save(game)
+    
+    print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
+
+    time.sleep(7)
+    os.system('cls' if os.name == 'nt' else 'clear')
+    return
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -461,14 +482,7 @@ def main():
       {style.RESET}""")
             time.sleep(5)
         elif s in ["quit", "q"]:
-            s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
-            if s[0] == 'Y':json_save(game)
-            
-            print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
-
-            time.sleep(7)
-            os.system('cls' if os.name == 'nt' else 'clear')
-
+            quit_game(game)
             return
         elif s in ["die"] and game["cheat_mode"]:
             print(f"{style.RED} > You have chosen to commit suicide. Game over!{style.RESET}")
@@ -477,26 +491,21 @@ def main():
             print(f"\n {style.GREEN}> Win{style.RESET}")
             game["level"] = 11
         elif s in ["save"]:
-            json_save()
+            json_save(game)
         elif s in ["load"]:
-            json_load()
+            game = json_load()
         elif s in ["explore", "e"]:
             game = random_encounter(game)
         elif s in ["status", "s"]:
-            print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
-            for key, value in game.items():
-                print(f"  {key}: {value}")
-                time.sleep(0.1)
-            time.sleep(5)
+            status(game)
         elif s in ["shop", "sh"]:
             pass
         elif s in ["use", "u"]:
             pass
         elif s in ["equip", "eq"]:
-            pass
+            game = equip(game)
         else:
             print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
-
 
         g = check_game_over(game); g = False if g == "none" else True
         
@@ -504,7 +513,7 @@ def main():
             time.sleep(7)
             return os.system('cls' if os.name == 'nt' else 'clear')
         
-        time.sleep(1)
+        time.sleep(3)
 
 if __name__ == "__main__":
     main()
