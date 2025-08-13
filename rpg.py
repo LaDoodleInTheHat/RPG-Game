@@ -353,8 +353,33 @@ def random_encounter(game):
                                 typewriter(his_attack, style.RED)
                     elif qu == "useItem":
                         if game["inventory"]:
-                            item = game["inventory"][0]
-                            typewriter(f"You used a {item}!", style.GREEN)
+                            for i, items in enumerate(game["inventory"], start=1):
+                                print(f"{i + 1}. {items}")
+
+                            try:
+                                item = game["inventory"][int(input(f"{style.BOLD}Which item would you like to use (#){style.RESET} >>> ")) - 1]
+                            except (IndexError, ValueError) as e:
+                                typewriter("Invalid item selection.", style.RED)
+                                continue
+
+                            if item[0] == 'mystic cloak':
+                                game["hp"] += 20
+                                for i in range(len(game['weapons'])):
+                                    game['weapons'][i][1] += 20
+                                    game['weapons'][i][2] += 20
+
+                                game["inventory"].remove(item)
+                                typewriter(f"You used a {item[0]} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
+                                time.sleep(0.5)
+                                typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
+                                print()
+                            
+                            elif item[0] == 'large health potion':
+                                game["hp"] += 50
+                                game["inventory"].remove(item)
+                                typewriter(f"You used a {item[0]} and gained 50 hp!", style.GREEN)
+                            else:
+                                typewriter(f"You can't use {item[0]}!", style.RED)
                         else:
                             typewriter("You have no items to use!", style.RED)
 
@@ -391,7 +416,7 @@ def random_encounter(game):
                 "Phoenix Feather",
                 "Elixir of Fortitude",
                 "Mystic Cloak",
-                "Thunder Hammer",
+                "(Totally) Mjölnir",
                 "Shadow Amulet"
             ]
 
@@ -405,8 +430,7 @@ def random_encounter(game):
 
             item = r.choice(items)
 
-
-            if item in weapon_stats:
+            if item in [w[0] for w in weapon_stats]:
                 # Only add if not already owned
                 if not item in game["weapons"]:
                     game["weapons"].append(item)
