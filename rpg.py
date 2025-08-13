@@ -118,9 +118,8 @@ On start, allow loading from an existing save file. 👍
 """
 
 import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
-from pathlib import Path
 
-#This adds styles that is used in the terminal
+# Styles class for ANSI escape codes for terminal colors and formatting
 class style():
     BLACK = '\033[30m'
     RED = '\033[31m'
@@ -135,20 +134,17 @@ class style():
     BOLD = '\033[1m'
     CLEAR_LINE = '\033[2K'
 
-
+# Spinner animation for loading effects
 def spinner(duration, delay):
-
     chars = ['-', '\\', '|', '/']
-
     previous = time.time()
-
     while time.time() - previous <= duration:
         for char in chars:
             print(f'     {char}', " "*10, end = '\r')
             time.sleep(delay)  
-
     print(style.CLEAR_LINE) 
 
+# Initialize a new game state dictionary
 def init_new_game():
     return {
         "level": 1,            
@@ -164,8 +160,8 @@ def init_new_game():
         "cheat_mode": os.path.exists('cheat')
     }
 
+# Save game state to JSON file
 def json_save(game):
-
     file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
     file_name = file_name if file_name.endswith(".json") else file_name+".json"
 
@@ -180,6 +176,7 @@ def json_save(game):
     except Exception as e:
         print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
 
+# Typewriter effect for text output
 def typewriter(text, color=style.RESET):
     for c in text:
         print(f"{color}{c}{style.RESET}", end='', flush=True)
@@ -187,6 +184,7 @@ def typewriter(text, color=style.RESET):
     print()
     time.sleep(0.5)
 
+# Load game state from JSON file
 def json_load():
     file_name = input(f"{style.BLUE}{style.BOLD} Load file name >>>{style.RESET} ").strip() + ".json"
 
@@ -206,7 +204,7 @@ def json_load():
                 "cheat_mode": bool
             }
 
-            # check for general formatting in required_keys {...}
+            # Validate required keys and types
             for key, expected_type in required_keys.items():
                 if key not in game_state:
                     print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
@@ -215,7 +213,7 @@ def json_load():
                     print(f"{style.RED} > Error loading file, Invalid Format{style.RESET}")
                     return None
 
-            # check for weapons format
+            # Validate weapons format
             for weapon in game_state["weapons"]:
                 if not (isinstance(weapon, list) and len(weapon) == 3 and
                         isinstance(weapon[0], str) and
@@ -227,13 +225,12 @@ def json_load():
                     print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                     return None
 
-            # check for artifacts format (all str)
+            # Validate artifacts format
             if not all(isinstance(a, str) for a in game_state["artifacts"]):
-
                 print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                 return None
 
-            # print gamestate from json file
+            # Print loaded game state
             print(f"\n{style.GREEN}Game loaded from {file_name}{style.RESET}")
             print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
             for key, value in game_state.items():
@@ -247,6 +244,7 @@ def json_load():
         print(f"{style.RED} > Unable to read file with error: {e}{style.RESET}")
         time.sleep(2)
 
+# Check for game over or victory conditions
 def check_game_over(game):
     if game["hp"] <= 0:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
@@ -254,15 +252,15 @@ def check_game_over(game):
     elif game["level"] == 11:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
         game["artifacts"].append("Drago's Egg")
-
         return "won"
     else:
         return "none"
     
+# Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
     spinner(1, 0.1)
 
-    # Format: [name, hp, damage, reward, chance]
+    # Monster format: [name, hp, damage, reward, chance]
     monsters = [
         ["VENOM DRAKE", 110, 35, 70, 180],
         ["NIGHT STALKER", 130, 45, 90, 340],
@@ -273,17 +271,15 @@ def random_encounter(game):
         ["BLADE PHANTOM", 400, 180, 500, 1000],
     ]
 
-    # Adjust monster chances based on level: higher level = higher chance for tough monsters
+    # Adjust monster chances based on level
     level = game["level"]
-    # Calculate a shift: at level 1, bias is 0; at level 10, bias is strong
     bias = min(max(level - 1, 0), 9)  # 0 to 9
-
     half = len(monsters)//2
     bias_shift = bias*2
     new_monsters = []
     
     for i, (name, hp, damage, reward, chance) in enumerate(monsters):
-        shift = bias_shift if i >= half else - bias_shift # easy monsters will get negative shift and diff monster positive shift
+        shift = bias_shift if i >= half else - bias_shift
         new_chance = max(0,min(1000, chance + shift))  
         new_monsters.append([name, hp, damage, reward, new_chance])
     
@@ -291,6 +287,7 @@ def random_encounter(game):
 
     i = r.randint(0, 100)
     if i <= 79:
+        # Monster fight
         i = r.randint(0, 1000)
         for monster in monsters:
             if i <= monster[4]:
@@ -300,13 +297,12 @@ def random_encounter(game):
                 typewriter(f"You ready your {player_weapon[0]}!", style.YELLOW)
 
                 time.sleep(1)
-                # Monster fight logic
-                
                 monster_hp = monster[1]
                 monster_name = monster[0]
                 monster_damage = monster[2]
                 reward_gold = monster[3]
 
+                # Battle loop
                 while monster_hp > 0 and game["hp"] > 0:
                     qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
                     print()
@@ -320,8 +316,6 @@ def random_encounter(game):
                             return game
                         else:
                             typewriter("You failed to escape!", style.RED)
-
-
                             if monster_hp > 0:
                                 his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
@@ -330,7 +324,6 @@ def random_encounter(game):
                     elif qu == "attack":
                         my_attack = f"You attack {monster_name} for {dmg} damage!"
                         monster_hp -= dmg
-
                         typewriter(my_attack, style.GREEN)
                         if monster_hp > 0:
                             his_attack = f"{monster_name} strikes you for {mdmg} damage!"
@@ -362,8 +355,11 @@ def random_encounter(game):
                                 typewriter("Invalid item selection.", style.RED)
                                 continue
 
+                            # --- Item use logic starts here ---
+                            # Mystic Cloak: buffs HP and all weapons, then removes itself
                             if item[0] == 'mystic cloak':
                                 game["hp"] += 20
+                                game["max_hp"] += 20
                                 for i in range(len(game['weapons'])):
                                     game['weapons'][i][1] += 20
                                     game['weapons'][i][2] += 20
@@ -373,15 +369,77 @@ def random_encounter(game):
                                 time.sleep(0.5)
                                 typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
                                 print()
-                            
-                            elif item[0] == 'large health potion':
+
+                            # Large Health Potion: heals 50 HP
+                            elif item[0] == 'Large Health Potion':
                                 game["hp"] += 50
                                 game["inventory"].remove(item)
                                 typewriter(f"You used a {item[0]} and gained 50 hp!", style.GREEN)
+
+                            # Small Health Potion: heals 20 HP
+                            elif item[0] == 'Small Health Potion':
+                                game["hp"] += 20
+                                game["inventory"].remove(item)
+                                typewriter(f"You used a {item[0]} and gained 20 hp!", style.GREEN)
+
+                            # Elixir of Fortitude: heals 100 HP
+                            elif item[0] == 'Elixir of Fortitude':
+                                game["hp"] += 100
+                                game["inventory"].remove(item)
+                                typewriter(f"You used an {item[0]} and gained 100 hp!", style.GREEN)
+
+                            # Phoenix Feather: adds a spell weapon if not already known
+                            elif item[0] == 'Phoenix Feather':
+                                spell = ["Phoenix's Flare Blitz", 100, 150]
+                                if not spell in game["weapons"]:
+                                    game["weapons"].append(spell)
+                                    typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                                    time.sleep(0.5)
+                                    typewriter("Equip spell through 'Equip' command", style.YELLOW)
+                                else:
+                                    typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
+            
+                                game["inventory"].remove(item)
+                                typewriter('The feather has been used...', style.YELLOW)
+                                
+                            # Magic Scroll: grants a random spell weapon if not already known
+                            elif item[0] == 'Magic Scroll':
+                                spells = [["Arcane Blast", 80, 120], ["Electrify", 60, 100], ["Frostbite", 70, 110], ["Fireball", 90, 130], ["Meteor Shower", 100, 150], ["Tornado Blast", 85, 125]]
+
+                                spell = r.choice(spells)
+                                if spell not in game["weapons"]:
+                                    game["weapons"].append(spell)
+                                    typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                                    time.sleep(0.5)
+                                    typewriter("Equip spell through 'Equip' command", style.YELLOW)
+                                else:
+                                    typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
+                                    
+
+                                game["inventory"].remove(item)
+                                typewriter('The scroll has been used...', style.YELLOW)
+                            
+                            # Default: item cannot be used in battle
                             else:
-                                typewriter(f"You can't use {item[0]}!", style.RED)
+                                typewriter(f"You can't use {item[0]} right now!", style.RED)
+                            # --- Item use logic ends here ---
                         else:
                             typewriter("You have no items to use!", style.RED)
+
+                        spinner(2, 0.1)
+
+                        i = r.randint(1, 2)
+                        if i == 1 and monster_hp > 0:
+                            typewriter("The monster is preparing to attack!", style.YELLOW)
+
+                            spinner(2, 0.1)
+
+                            his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                            game["hp"] -= mdmg
+                            typewriter(his_attack, style.RED)
+                            
+                        else:
+                            typewriter("You safely use your item.", style.GREEN)
 
                     hp_line = f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}"
                     typewriter(hp_line, style.YELLOW)
@@ -395,6 +453,7 @@ def random_encounter(game):
 
                 time.sleep(3)
                 return game           
+
     elif i <= 99:
         # Treasure Chest Encounter
         typewriter("You found a mysterious treasure chest!", style.YELLOW)
@@ -420,7 +479,7 @@ def random_encounter(game):
                 "Shadow Amulet"
             ]
 
-            # Weapons and their damage ranges, format - weapon name, min damage, max damage
+            # Weapons and their damage ranges
             weapon_stats = [
                 ["Iron Sword", 5, 10],
                 ["Steel Axe", 8, 16],
@@ -430,6 +489,7 @@ def random_encounter(game):
 
             item = r.choice(items)
 
+            # Check if item is a weapon
             if item in [w[0] for w in weapon_stats]:
                 # Only add if not already owned
                 if not item in game["weapons"]:
@@ -438,16 +498,29 @@ def random_encounter(game):
                 else:
                     typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
                     game["gold"] += 50
+            
+            # Check if item is an artifact
+            elif item[0] == 'Shadow Amulet':
+                if not item in game['Artifacts']:
+                    game['Artifacts'].append(item)
+                    typewriter(f"You found a {item}!", style.CYAN)
+                else:
+                    typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
+                    game["gold"] += 50
+            
+            # Otherwise, add to inventory
             else:
                 game["inventory"].append(item)
                 typewriter(f"You found a {item}!", style.CYAN)
-            
         
         return game
+    
     elif i <= 100:
+        # Shopkeeper encounter
         typewriter("You have encountered a Buffed Shopkeeper, buy an op item with your gold!", style.YELLOW)
         return game
-    
+
+# Equip a weapon from the arsenal
 def equip(game):
     print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
 
@@ -460,8 +533,9 @@ def equip(game):
     except Exception as e:
         print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
 
-    typewriter(f"{style.YELLOW}You have equipped the {style.UNDERLINE}{style.BOLD}{game["weapons"][game["equipped"]]}")
+    typewriter(f"{style.YELLOW}You have equipped the {style.UNDERLINE}{style.BOLD}{game['weapons'][game['equipped']]}")
 
+# Print current game status
 def status(game):
     print(f"{style.CYAN}{style.BOLD}Current Game State:{style.RESET}")
     for key, value in game.items():
@@ -469,9 +543,11 @@ def status(game):
         time.sleep(0.1)
     time.sleep(5)
 
-def  quit_game(game):
+# Handle quitting the game and saving
+def quit_game(game):
     s = input(f'\n{style.CYAN}You are going to quit the game, would you like to save in a file? Y/N >>> {style.RESET}').upper().strip()
-    if s[0] == 'Y':json_save(game)
+    if s[0] == 'Y':
+        json_save(game)
     
     print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
 
@@ -479,6 +555,7 @@ def  quit_game(game):
     os.system('cls' if os.name == 'nt' else 'clear')
     return
 
+# Main game loop
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     game = init_new_game()
@@ -531,7 +608,7 @@ def main():
         else:
             print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
-        g = check_game_over(game); g = False if g == "none" else True
+        g = False if check_game_over(game) == "none" else True
         
         if g:
             time.sleep(7)
@@ -541,4 +618,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
