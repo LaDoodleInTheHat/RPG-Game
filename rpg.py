@@ -616,5 +616,6 @@ def main():
         
         time.sleep(3)
 
+# Start the game
 if __name__ == "__main__":
     main()
