@@ -255,7 +255,92 @@ def check_game_over(game):
         return "won"
     else:
         return "none"
-    
+
+# To use an item
+
+def use_item(game):
+    if game["inventory"]:
+        for i, items in enumerate(game["inventory"], start=1):
+            print(f"{i + 1}. {items}")
+            time.sleep(0.1)
+
+        try:
+            item = game["inventory"][int(input(f"{style.BOLD}Which item would you like to use (#){style.RESET} >>> ")) - 1]
+        except (IndexError, ValueError) as e:
+            typewriter("Invalid item selection.", style.RED)
+            return game
+
+        # Mystic Cloak: buffs HP and all weapons, then removes itself
+        if item[0] == 'mystic cloak':
+            game["hp"] += 20
+            game["max_hp"] += 20
+            for i in range(len(game['weapons'])):
+                game['weapons'][i][1] += 20
+                game['weapons'][i][2] += 20
+
+            game["inventory"].remove(item)
+            typewriter(f"You used a {item[0]} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
+            time.sleep(0.5)
+            typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
+            print()
+
+        # Large Health Potion: heals 50 HP
+        elif item[0] == 'Large Health Potion':
+            game["hp"] += 50
+            game["inventory"].remove(item)
+            typewriter(f"You used a {item[0]} and gained 50 hp!", style.GREEN)
+
+        # Small Health Potion: heals 20 HP
+        elif item[0] == 'Small Health Potion':
+            game["hp"] += 20
+            game["inventory"].remove(item)
+            typewriter(f"You used a {item[0]} and gained 20 hp!", style.GREEN)
+
+        # Elixir of Fortitude: heals 100 HP
+        elif item[0] == 'Elixir of Fortitude':
+            game["hp"] += 100
+            game["inventory"].remove(item)
+            typewriter(f"You used an {item[0]} and gained 100 hp!", style.GREEN)
+
+        # Phoenix Feather: adds a spell weapon if not already known
+        elif item[0] == 'Phoenix Feather':
+            spell = ["Phoenix's Flare Blitz", 100, 150]
+            if not spell in game["weapons"]:
+                game["weapons"].append(spell)
+                typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                time.sleep(0.5)
+                typewriter("Equip spell through 'Equip' command", style.YELLOW)
+            else:
+                typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
+
+            game["inventory"].remove(item)
+            typewriter('The feather has been used...', style.YELLOW)
+            
+        # Magic Scroll: grants a random spell weapon if not already known
+        elif item[0] == 'Magic Scroll':
+            spells = [["Arcane Blast", 80, 120], ["Electrify", 60, 100], ["Frostbite", 70, 110], ["Fireball", 90, 130], ["Meteor Shower", 100, 150], ["Tornado Blast", 85, 125]]
+
+            spell = r.choice(spells)
+            if spell not in game["weapons"]:
+                game["weapons"].append(spell)
+                typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                time.sleep(0.5)
+                typewriter("Equip spell through 'Equip' command", style.YELLOW)
+            else:
+                typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
+                
+
+            game["inventory"].remove(item)
+            typewriter('The scroll has been used...', style.YELLOW)
+
+        # Default: item cannot be used in battle
+        else:
+            typewriter(f"You can't use {item[0]} right now!", style.RED)
+        
+        return game
+    else:
+        typewriter("You have no items to use!", style.RED)
+
 # Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
     spinner(1, 0.1)
@@ -320,7 +405,6 @@ def random_encounter(game):
                                 his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
                                 typewriter(his_attack, style.RED)
-
                     elif qu == "attack":
                         my_attack = f"You attack {monster_name} for {dmg} damage!"
                         monster_hp -= dmg
@@ -329,7 +413,6 @@ def random_encounter(game):
                             his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                             game["hp"] -= mdmg
                             typewriter(his_attack, style.RED)
-
                     elif qu == "counter":
                         if r.randint(1, 100) <= 50:
                             his_attack = f"{monster_name} tried to strike you, but failed!"
@@ -345,86 +428,8 @@ def random_encounter(game):
                                 game["hp"] -= mdmg
                                 typewriter(his_attack, style.RED)
                     elif qu == "useItem":
-                        if game["inventory"]:
-                            for i, items in enumerate(game["inventory"], start=1):
-                                print(f"{i + 1}. {items}")
-
-                            try:
-                                item = game["inventory"][int(input(f"{style.BOLD}Which item would you like to use (#){style.RESET} >>> ")) - 1]
-                            except (IndexError, ValueError) as e:
-                                typewriter("Invalid item selection.", style.RED)
-                                continue
-
-                            # --- Item use logic starts here ---
-                            # Mystic Cloak: buffs HP and all weapons, then removes itself
-                            if item[0] == 'mystic cloak':
-                                game["hp"] += 20
-                                game["max_hp"] += 20
-                                for i in range(len(game['weapons'])):
-                                    game['weapons'][i][1] += 20
-                                    game['weapons'][i][2] += 20
-
-                                game["inventory"].remove(item)
-                                typewriter(f"You used a {item[0]} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
-                                time.sleep(0.5)
-                                typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
-                                print()
-
-                            # Large Health Potion: heals 50 HP
-                            elif item[0] == 'Large Health Potion':
-                                game["hp"] += 50
-                                game["inventory"].remove(item)
-                                typewriter(f"You used a {item[0]} and gained 50 hp!", style.GREEN)
-
-                            # Small Health Potion: heals 20 HP
-                            elif item[0] == 'Small Health Potion':
-                                game["hp"] += 20
-                                game["inventory"].remove(item)
-                                typewriter(f"You used a {item[0]} and gained 20 hp!", style.GREEN)
-
-                            # Elixir of Fortitude: heals 100 HP
-                            elif item[0] == 'Elixir of Fortitude':
-                                game["hp"] += 100
-                                game["inventory"].remove(item)
-                                typewriter(f"You used an {item[0]} and gained 100 hp!", style.GREEN)
-
-                            # Phoenix Feather: adds a spell weapon if not already known
-                            elif item[0] == 'Phoenix Feather':
-                                spell = ["Phoenix's Flare Blitz", 100, 150]
-                                if not spell in game["weapons"]:
-                                    game["weapons"].append(spell)
-                                    typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
-                                    time.sleep(0.5)
-                                    typewriter("Equip spell through 'Equip' command", style.YELLOW)
-                                else:
-                                    typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
-            
-                                game["inventory"].remove(item)
-                                typewriter('The feather has been used...', style.YELLOW)
-                                
-                            # Magic Scroll: grants a random spell weapon if not already known
-                            elif item[0] == 'Magic Scroll':
-                                spells = [["Arcane Blast", 80, 120], ["Electrify", 60, 100], ["Frostbite", 70, 110], ["Fireball", 90, 130], ["Meteor Shower", 100, 150], ["Tornado Blast", 85, 125]]
-
-                                spell = r.choice(spells)
-                                if spell not in game["weapons"]:
-                                    game["weapons"].append(spell)
-                                    typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
-                                    time.sleep(0.5)
-                                    typewriter("Equip spell through 'Equip' command", style.YELLOW)
-                                else:
-                                    typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
-                                    
-
-                                game["inventory"].remove(item)
-                                typewriter('The scroll has been used...', style.YELLOW)
-                            
-                            # Default: item cannot be used in battle
-                            else:
-                                typewriter(f"You can't use {item[0]} right now!", style.RED)
-                            # --- Item use logic ends here ---
-                        else:
-                            typewriter("You have no items to use!", style.RED)
+                        
+                        game = use_item(game)
 
                         spinner(2, 0.1)
 
@@ -602,7 +607,7 @@ def main():
         elif s in ["shop", "sh"]:
             pass
         elif s in ["use", "u"]:
-            pass
+            game = use_item(game)
         elif s in ["equip", "eq"]:
             game = equip(game)
         else:
