@@ -60,11 +60,11 @@ On start, allow loading from an existing save file. 👍
 
     Weapons have a name and damage range stored in parallel lists (no dicts!).
 
-    Potions in inventory can heal a fixed amount when used. 🚫📋‼️‼️‼️‼️‼️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+    Potions in inventory can heal a fixed amount when used. 
 
-6- Shop System
+6- Shop System 👍
 
-    Accessible between levels or via secret “shop” command.
+    Accessible via “shop” command.
 
     Items to purchase (with prices):
 
@@ -78,16 +78,14 @@ On start, allow loading from an existing save file. 👍
 
     Deduct gold and add items/weapons to lists.
 
-7- Level Progression
-    Clearing a level increases level by 1.
-
-    On odd levels, increase monster difficulty; on even levels, offer treasure rooms.
+7- Level Progression 
+    Buy a level up from shop. 👍
 
 
 8- Cheat Mode 👍
     If a file named invincibility.txt exists, automatically unlock a hidden command cheat allowing you to set any game parameter (HP, gold, level).
 
-9- Commands and Help
+9- Commands and Help 👍
     explore (or e) - descend to the next level and trigger encounter
 
     status (or s) - show current HP, level, gold, inventory, equipped weapon
@@ -106,7 +104,7 @@ On start, allow loading from an existing save file. 👍
 
     quit - exit (prompt to save)
 
-10 - Victory & Defeat
+10 - Victory & Defeat 👍
 
     Victory: Reaching Level-11 (having cleared Level-10) and defeating the Dragon Lord grants the “Drago's Egg” artifact and ends the game.
 
@@ -257,7 +255,6 @@ def check_game_over(game):
         return "none"
 
 # To use an item
-
 def use_item(game):
     if game["inventory"]:
         for i, items in enumerate(game["inventory"], start=1):
@@ -560,6 +557,92 @@ def quit_game(game):
     os.system('cls' if os.name == 'nt' else 'clear')
     return
 
+# The shop to buy items and level ups
+def shop(game):
+    items = [
+        "Small Health Potion",
+        "Large Health Potion",
+        "Magic Scroll",
+        "Secret Map",
+        "Iron Sword",
+        "Steel Axe",
+        "Enchanted Dagger",
+        "Phoenix Feather",
+        "Elixir of Fortitude",
+        "Mystic Cloak",
+        "(Totally) Mjölnir",
+        "Shadow Amulet",
+        "Level Up"
+    ]
+
+    # Weapons and their damage ranges
+    weapon_stats = [
+        ["Iron Sword", 5, 10],
+        ["Steel Axe", 8, 16],
+        ["Enchanted Dagger", 4, 14],
+        ["(Totally) Mjölnir", 100, 220]
+    ]
+
+    item_costs = {
+        "Small Health Potion": 30,
+        "Large Health Potion": 90,
+        "Magic Scroll": 120,
+        "Secret Map": 150,
+        "Iron Sword": 100,
+        "Steel Axe": 200,
+        "Enchanted Dagger": 150,
+        "Phoenix Feather": 300,
+        "Elixir of Fortitude": 200,
+        "Mystic Cloak": 250,
+         "(Totally) Mjölnir": 500,
+        "Shadow Amulet": 350,
+        "Level Up": 300 * game["level"]
+    }
+
+    typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:')
+
+    while True:
+        for item, cost in item_costs.items():
+            print(f' {item_costs.index(item) - 1}. {item}: {cost} gold')
+            time.sleep(0.1)
+        print()
+        try:
+            choice = str(input(f"{style.CYAN}Enter the item you wish to buy (or 'exit' to leave) >>> {style.RESET}")).strip()
+        except Exception as e:
+            print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
+            continue
+
+        if choice == "exit":
+            typewriter(f"Thank you for visiting the shop!", style.BLUE)
+            break
+        elif choice == 'Level Up':
+            if game['gold']>= item_costs["Level Up"]:
+                game["gold"] -= item_costs[choice]
+                game["level"] += 1
+                typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
+        elif choice in [w[0] for w in weapon_stats]:
+            if game['gold'] >= item_costs[choice]:
+                game["gold"] -= item_costs[choice]
+                game["weapons"].append(choice)
+                typewriter(f"You have purchased {choice}!", style.GREEN)
+        elif choice in item_costs:
+            if game["gold"] >= item_costs[choice]:
+                game["gold"] -= item_costs[choice]
+                game["inventory"].append(choice)
+                typewriter(f"You have purchased {choice}!", style.GREEN)
+            else:
+                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
+        else:
+            typewriter(f"Invalid item choice.", style.RED)
+
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+
+    time.sleep(2)
+    print()
+
+    return game
+
 # Main game loop
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -605,7 +688,7 @@ def main():
         elif s in ["status", "s"]:
             status(game)
         elif s in ["shop", "sh"]:
-            pass
+            game = shop(game)
         elif s in ["use", "u"]:
             game = use_item(game)
         elif s in ["equip", "eq"]:
