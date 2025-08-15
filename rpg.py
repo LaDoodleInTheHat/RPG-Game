@@ -38,7 +38,7 @@ On start, allow loading from an existing save file. 👍
 
         Treasure Chest (20%): random gold amount or random item drop.
 
-        Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding.
+        Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding. 🤔‼️‼️‼️‼️‼️⚠️⚠️⚠️⚠️⚠️🚫🚫🚫🚫🚫
 
 4- Battle System - one feature left 👍
 
@@ -268,7 +268,7 @@ def use_item(game):
             return game
 
         # Mystic Cloak: buffs HP and all weapons, then removes itself
-        if item[0] == 'mystic cloak':
+        if item == 'Mystic Cloak':
             game["hp"] += 20
             game["max_hp"] += 20
             for i in range(len(game['weapons'])):
@@ -276,35 +276,35 @@ def use_item(game):
                 game['weapons'][i][2] += 20
 
             game["inventory"].remove(item)
-            typewriter(f"You used a {item[0]} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
+            typewriter(f"You used a {item} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
             time.sleep(0.5)
             typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
             print()
 
         # Large Health Potion: heals 50 HP
-        elif item[0] == 'Large Health Potion':
+        elif item == 'Large Health Potion':
             game["hp"] += 50
             game["inventory"].remove(item)
-            typewriter(f"You used a {item[0]} and gained 50 hp!", style.GREEN)
+            typewriter(f"You used a {item} and gained 50 hp!", style.GREEN)
 
         # Small Health Potion: heals 20 HP
-        elif item[0] == 'Small Health Potion':
+        elif item == 'Small Health Potion':
             game["hp"] += 20
             game["inventory"].remove(item)
-            typewriter(f"You used a {item[0]} and gained 20 hp!", style.GREEN)
+            typewriter(f"You used a {item} and gained 20 hp!", style.GREEN)
 
         # Elixir of Fortitude: heals 100 HP
-        elif item[0] == 'Elixir of Fortitude':
+        elif item == 'Elixir of Fortitude':
             game["hp"] += 100
             game["inventory"].remove(item)
-            typewriter(f"You used an {item[0]} and gained 100 hp!", style.GREEN)
+            typewriter(f"You used an {item} and gained 100 hp!", style.GREEN)
 
         # Phoenix Feather: adds a spell weapon if not already known
-        elif item[0] == 'Phoenix Feather':
+        elif item == 'Phoenix Feather':
             spell = ["Phoenix's Flare Blitz", 100, 150]
             if not spell in game["weapons"]:
                 game["weapons"].append(spell)
-                typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                typewriter(f"You used a {item} and learned a new spell: {spell[0]}!", style.GREEN)
                 time.sleep(0.5)
                 typewriter("Equip spell through 'Equip' command", style.YELLOW)
             else:
@@ -314,13 +314,13 @@ def use_item(game):
             typewriter('The feather has been used...', style.YELLOW)
             
         # Magic Scroll: grants a random spell weapon if not already known
-        elif item[0] == 'Magic Scroll':
+        elif item == 'Magic Scroll':
             spells = [["Arcane Blast", 80, 120], ["Electrify", 60, 100], ["Frostbite", 70, 110], ["Fireball", 90, 130], ["Meteor Shower", 100, 150], ["Tornado Blast", 85, 125]]
 
             spell = r.choice(spells)
             if spell not in game["weapons"]:
                 game["weapons"].append(spell)
-                typewriter(f"You used a {item[0]} and learned a new spell: {spell[0]}!", style.GREEN)
+                typewriter(f"You used a {item} and learned a new spell: {spell[0]}!", style.GREEN)
                 time.sleep(0.5)
                 typewriter("Equip spell through 'Equip' command", style.YELLOW)
             else:
@@ -330,9 +330,21 @@ def use_item(game):
             game["inventory"].remove(item)
             typewriter('The scroll has been used...', style.YELLOW)
 
+        elif item == 'Infinity Heal':
+            game['hp'] = game['max_hp']
+            game['inventory'].remove(item)
+            typewriter("You have just recovered all of your hp with your Infinity Heal", style.GREEN)
+        
+        elif item == "Infinity Buff":
+            for w in range(0,len(game["weapons"])):
+                game["weapons"][w][1] += 100
+                game["weapons"][w][2] += 100
+            game["inventory"].remove(item)
+            typewriter("You used an Infinity Buff and increased all your weapon's damage!", style.GREEN)
+
         # Default: item cannot be used in battle
         else:
-            typewriter(f"You can't use {item[0]} right now!", style.RED)
+            typewriter(f"You can't use {item} right now!", style.RED)
         
         return game
     else:
@@ -482,12 +494,12 @@ def random_encounter(game):
             ]
 
             # Weapons and their damage ranges
-            weapon_stats = [
-                ["Iron Sword", 5, 10],
-                ["Steel Axe", 8, 16],
-                ["Enchanted Dagger", 4, 14],
-                ["(Totally) Mjölnir", 100, 220]
-            ]
+            weapon_stats = {
+                "Iron Sword": ["Iron Sword", 5, 10],
+                "Steel Axe": ["Steel Axe", 8, 16],
+                "Enchanted Dagger": ["Enchanted Dagger", 4, 14],
+                "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
+            }
 
             item = r.choice(items)
 
@@ -495,16 +507,16 @@ def random_encounter(game):
             if item in [w[0] for w in weapon_stats]:
                 # Only add if not already owned
                 if not item in game["weapons"]:
-                    game["weapons"].append(item)
+                    game["weapons"].append(weapon_stats[item])
                     typewriter(f"You found a {item}! (Damage {item[1]}-{item[2]})", style.CYAN)
                 else:
                     typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
                     game["gold"] += 50
             
             # Check if item is an artifact
-            elif item[0] == 'Shadow Amulet':
-                if not item in game['Artifacts']:
-                    game['Artifacts'].append(item)
+            elif item == 'Shadow Amulet':
+                if not item in game['artifacts']:
+                    game['artifacts'].append(item)
                     typewriter(f"You found a {item}!", style.CYAN)
                 else:
                     typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
@@ -519,7 +531,62 @@ def random_encounter(game):
     
     elif i <= 100:
         # Shopkeeper encounter
-        typewriter("You have encountered a Buffed Shopkeeper, buy an op item with your gold!", style.YELLOW)
+        typewriter("Hmmmmmm...", style.YELLOW)
+        time.sleep(5)
+        typewriter("An adventurer...", style.YELLOW)
+        time.sleep(1)
+        typewriter("Welcome to the secret shop...", style.GREEN)
+        time.sleep(0.5)
+        typewriter("You can get special items and for cheaper...", style.GREEN)
+        time.sleep(0.5)
+        typewriter("Also btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
+
+        item_costs = {
+            "Pen": 500,
+            "Infinity Heal": 200,
+            "Infinity Buff" : 200,
+            "Level Up (Cheaper)": 50*game["level"]
+        }
+
+        pen = ["Pen", 999999999999999999999999999999999, 999999999999999999999999999999999999999999999999999999999999999999]
+        
+        while True:
+            for idx, (item, cost) in enumerate(item_costs.items(), start=1):
+                print(f'{idx}. {item}: {cost} gold')
+                time.sleep(0.1)
+            i = input(f"Please pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
+
+            if i == "exit":
+                typewriter("Thank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
+                time.sleep(5)
+                break
+            elif i == "Level Up (Cheaper)":
+                if game['gold']>= item_costs["Level Up (Cheaper)"]:
+                    game["gold"] -= item_costs[i]
+                    game["level"] += 1
+                    typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
+                else:
+                    typewriter(f"How can you not afford this?", style.RED)
+            elif i == "Pen":
+                if game['gold'] >= item_costs["Pen"]:
+                    game['gold'] -= item_costs[i]
+                    game['weapons'].append(pen)
+                    typewriter("If you lose this, then I will not be very happy :P")
+                else:
+                    typewriter(f"Poor.", style.RED)
+            elif i in item_costs:
+                if game['gold']>= item_costs["Level Up (Cheaper)"]:
+                    game["gold"] -= item_costs[i]
+                    game["inventory"].append(i)
+                    typewriter("Please take care of this, it was quite expensive...", style.GREEN)
+                else:
+                    typewriter(f"Why even try, I thought you kept count of taxes man :P", style.RED)
+            else:
+                typewriter("Mate, you're meant to type it absolutely perfectly :(", style.RED)
+                
+            time.sleep(2)
+            os.system('cls' if os.name == 'nt' else 'clear')
+
         return game
 
 # Equip a weapon from the arsenal
@@ -559,29 +626,14 @@ def quit_game(game):
 
 # The shop to buy items and level ups
 def shop(game):
-    items = [
-        "Small Health Potion",
-        "Large Health Potion",
-        "Magic Scroll",
-        "Secret Map",
-        "Iron Sword",
-        "Steel Axe",
-        "Enchanted Dagger",
-        "Phoenix Feather",
-        "Elixir of Fortitude",
-        "Mystic Cloak",
-        "(Totally) Mjölnir",
-        "Shadow Amulet",
-        "Level Up"
-    ]
 
     # Weapons and their damage ranges
-    weapon_stats = [
-        ["Iron Sword", 5, 10],
-        ["Steel Axe", 8, 16],
-        ["Enchanted Dagger", 4, 14],
-        ["(Totally) Mjölnir", 100, 220]
-    ]
+    weapon_stats = {
+        "Iron Sword": ["Iron Sword", 5, 10],
+        "Steel Axe": ["Steel Axe", 8, 16],
+        "Enchanted Dagger": ["Enchanted Dagger", 4, 14],
+        "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
+    }
 
     item_costs = {
         "Small Health Potion": 30,
@@ -594,7 +646,7 @@ def shop(game):
         "Phoenix Feather": 300,
         "Elixir of Fortitude": 200,
         "Mystic Cloak": 250,
-         "(Totally) Mjölnir": 500,
+        "(Totally) Mjölnir": 500,
         "Shadow Amulet": 350,
         "Level Up": 300 * game["level"]
     }
@@ -602,8 +654,8 @@ def shop(game):
     typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:')
 
     while True:
-        for item, cost in item_costs.items():
-            print(f' {item_costs.index(item) - 1}. {item}: {cost} gold')
+        for idx, (item, cost) in enumerate(item_costs.items(), start=1):
+            print(f'{idx}. {item}: {cost} gold')
             time.sleep(0.1)
         print()
         try:
@@ -620,11 +672,15 @@ def shop(game):
                 game["gold"] -= item_costs[choice]
                 game["level"] += 1
                 typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
+            else:
+                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
         elif choice in [w[0] for w in weapon_stats]:
             if game['gold'] >= item_costs[choice]:
                 game["gold"] -= item_costs[choice]
-                game["weapons"].append(choice)
+                game["weapons"].append(weapon_stats[choice])
                 typewriter(f"You have purchased {choice}!", style.GREEN)
+            else:
+                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
         elif choice in item_costs:
             if game["gold"] >= item_costs[choice]:
                 game["gold"] -= item_costs[choice]
