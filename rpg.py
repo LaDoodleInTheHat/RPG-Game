@@ -38,7 +38,7 @@ On start, allow loading from an existing save file. 👍
 
         Treasure Chest (20%): random gold amount or random item drop.
 
-        Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding. 🤔‼️‼️‼️‼️‼️⚠️⚠️⚠️⚠️⚠️🚫🚫🚫🚫🚫
+        Shopkeeper (Extra buffed with insane items) (1%): opportunity to buy potions/tools before proceeding. 👍
 
 4- Battle System - one feature left 👍
 
@@ -258,7 +258,7 @@ def check_game_over(game):
 def use_item(game):
     if game["inventory"]:
         for i, items in enumerate(game["inventory"], start=1):
-            print(f"{i + 1}. {items}")
+            print(f"{i}. {items}")
             time.sleep(0.1)
 
         try:
@@ -378,8 +378,12 @@ def random_encounter(game):
         new_monsters.append([name, hp, damage, reward, new_chance])
     
     monsters = new_monsters
+    try:
+        i = r.randint(0, 100) if not game['cheat_mode'] else int(input("Monster : (0-79), Treasure : (80-99), Shopkeeper : (100) >>> "))
+    except Exception as e:
+        typewriter("Invalid input! Defaulting to normal encounter.", style.RED)
+        i = r.randint(0, 100)
 
-    i = r.randint(0, 100)
     if i <= 79:
         # Monster fight
         i = r.randint(0, 1000)
@@ -534,12 +538,12 @@ def random_encounter(game):
         typewriter("Hmmmmmm...", style.YELLOW)
         time.sleep(5)
         typewriter("An adventurer...", style.YELLOW)
-        time.sleep(1)
-        typewriter("Welcome to the secret shop...", style.GREEN)
+        time.sleep(2)
+        typewriter("\nWelcome to the secret shop...", style.GREEN)
         time.sleep(0.5)
         typewriter("You can get special items and for cheaper...", style.GREEN)
         time.sleep(0.5)
-        typewriter("Also btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
+        typewriter("\nAlso btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
 
         item_costs = {
             "Pen": 500,
@@ -554,35 +558,41 @@ def random_encounter(game):
             for idx, (item, cost) in enumerate(item_costs.items(), start=1):
                 print(f'{idx}. {item}: {cost} gold')
                 time.sleep(0.1)
-            i = input(f"Please pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
+            i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
 
             if i == "exit":
-                typewriter("Thank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
+                typewriter("\nThank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
                 time.sleep(5)
                 break
             elif i == "Level Up (Cheaper)":
                 if game['gold']>= item_costs["Level Up (Cheaper)"]:
                     game["gold"] -= item_costs[i]
                     game["level"] += 1
-                    typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
+                    typewriter(f"\nYou have leveled up to level {game['level']}!", style.GREEN)
                 else:
-                    typewriter(f"How can you not afford this?", style.RED)
+                    typewriter(f"\nHow can you not afford this?", style.RED)
+                    time.sleep(0.5)
+                    typewriter("It literally says 'Cheaper' in the name", style.RED)
+                    time.sleep(0.5)
+                    typewriter("Please pay attention of ur gold next time.", style.RED)
             elif i == "Pen":
                 if game['gold'] >= item_costs["Pen"]:
                     game['gold'] -= item_costs[i]
                     game['weapons'].append(pen)
-                    typewriter("If you lose this, then I will not be very happy :P")
+                    typewriter("\nIf you lose this, then I will not be very happy :P", style.GREEN)
+                    time.sleep(0.5)
+                    typewriter("This Pen is my signature weapon", style.GREEN)
                 else:
-                    typewriter(f"Poor.", style.RED)
+                    typewriter(f"\nPoor.", style.RED)
             elif i in item_costs:
                 if game['gold']>= item_costs["Level Up (Cheaper)"]:
                     game["gold"] -= item_costs[i]
                     game["inventory"].append(i)
-                    typewriter("Please take care of this, it was quite expensive...", style.GREEN)
+                    typewriter("\nPlease take care of this, it was quite expensive...", style.GREEN)
                 else:
-                    typewriter(f"Why even try, I thought you kept count of taxes man :P", style.RED)
+                    typewriter("\nWhy even try, I thought you kept count of taxes man :P", style.RED)
             else:
-                typewriter("Mate, you're meant to type it absolutely perfectly :(", style.RED)
+                typewriter("\nMate, you're meant to type it absolutely perfectly :(", style.RED)
                 
             time.sleep(2)
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -657,7 +667,7 @@ def shop(game):
         for idx, (item, cost) in enumerate(item_costs.items(), start=1):
             print(f'{idx}. {item}: {cost} gold')
             time.sleep(0.1)
-        print()
+        print(f"{style.YELLOW} Current Gold: {game['gold']} {style.RESET}")
         try:
             choice = str(input(f"{style.CYAN}Enter the item you wish to buy (or 'exit' to leave) >>> {style.RESET}")).strip()
         except Exception as e:
@@ -689,7 +699,7 @@ def shop(game):
             else:
                 typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
         else:
-            typewriter(f"Invalid item choice.", style.RED)
+            typewriter(f" > Invalid item choice, Make sure you type it perfectly", style.RED)
 
         os.system('cls' if os.name == 'nt' else 'clear')
 
