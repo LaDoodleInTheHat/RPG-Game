@@ -117,6 +117,8 @@ On start, allow loading from an existing save file. 👍
 
 import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
 
+bsvc = 0
+
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
     BLACK = '\033[30m'
@@ -143,7 +145,7 @@ def spinner(duration, delay):
     print(style.CLEAR_LINE) 
 
 # Initialize a new game state dictionary
-def init_new_game():
+def init_new_game(game):
     return {
         "level": 1,            
         "hp": 100,               
@@ -154,8 +156,20 @@ def init_new_game():
             ["Fists", 10, 20]
         ],     
         "equipped": 0,      
-        "artifacts": ["LaDoodle's Hat"], 
-        "cheat_mode": os.path.exists('cheat')
+        "artifacts": [], 
+        "cheat_mode": False
+    } if not os.path.exists('cheat') else {
+        "level": 1,
+        "hp": 9999,
+        "max_hp": 9999,
+        "gold": 1000000000000000000,
+        "inventory": [],
+        "weapons": [
+            ["Pen", 99999999999999999999999, 9999999999999999999999999999999999999]
+        ],
+        "equipped": 0,
+        "artifacts": ["LaDoodle's Hat"],
+        "cheat_mode": True
     }
 
 # Save game state to JSON file
@@ -535,33 +549,124 @@ def random_encounter(game):
     
     elif i <= 100:
         # Shopkeeper encounter
-        typewriter("Hmmmmmm...", style.YELLOW)
-        time.sleep(5)
-        typewriter("An adventurer...", style.YELLOW)
-        time.sleep(2)
-        typewriter("\nWelcome to the secret shop...", style.GREEN)
-        time.sleep(0.5)
-        typewriter("You can get special items and for cheaper...", style.GREEN)
-        time.sleep(0.5)
-        typewriter("\nAlso btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
+        if bvsc == 0:
+            typewriter("Hmmmmmm...", style.YELLOW)
+            time.sleep(5)
+            typewriter("An adventurer...", style.YELLOW)
+            time.sleep(2)
+            typewriter("\nWelcome to the secret shop...", style.GREEN)
+            time.sleep(0.5)
+            typewriter("You can get special items and for cheaper...", style.GREEN)
+            time.sleep(0.5)
+            if "LaDoodle's Hat" in game['artifacts']:
+                time.sleep(2)
+                typewriter("I see you have my hat, wonder how that got there....", style.YELLOW)
+                time.sleep(0.5)
 
-        item_costs = {
-            "Pen": 500,
-            "Infinity Heal": 200,
-            "Infinity Buff" : 200,
-            "Level Up (Cheaper)": 50*game["level"]
-        }
+            if game['cheat_mode']:
+                typewriter("Ah, I see you're in cheat mode. you are a disgrace to gaming. :(", style.RED)
+                time.sleep(0.5)
+                typewriter("Meh, doesn't rlly matter that much anyway", style.YELLOW)
+                time.sleep(0.5)
+            typewriter("\nAlso btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
+        elif bvsc == 1:
+            typewriter("Bro, how did I even flippin get here?", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("Did I just... teleport?", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("This is some crazy stuff, man.", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("I need to get out of here.", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("Oh.", style.YELLOW)
+            time.sleep(2)
+            typewriter("It's you", style.YELLOW)
+            time.sleep(0.5)
+            if game['cheat_mode']:
+                typewriter("Still wonder how much cheating you do...")
+                time.sleep(0.5)
+
+            if "LaDoodle's Hat" in game['artifacts']:
+                time.sleep(2)
+                typewriter("AAAnd you still have my hat, can I have that back pls?", style.YELLOW)
+                x = True if input(" (y/n) >>> ").strip().lower() == "y" else False
+
+                if x:
+                    game['artifacts'].remove("LaDoodle's Hat")
+                    typewriter("Thank you! I rlly appreciate it.", style.GREEN)
+                    game["gold"] += 100
+                    print(f"{style.BOLD} +100 gold{style.RESET}")
+                    typewriter("Also I gave you some gold for giving it back :)", style.GREEN)
+                else:
+                    typewriter("That's too bad. I really want it back.", style.YELLOW)
+                time.sleep(0.5)
+            
+            typewriter("Now that I'm here, why don't you just buy something.", style.GREEN)
+
+        elif bvsc == 2:
+            typewriter("...", style.RED)
+            time.sleep(3)
+            typewriter("WHAT THE HELL MAN", style.RED)
+            time.sleep(0.5)
+            typewriter("WHY DO I KEEP ON TELEPORTING TO WHEREVER THE HELL YOU ARE?", style.RED)
+            time.sleep(0.5)
+            typewriter("I THOUGHT I CODED IT TO BE A 1% CHANCE OF SUMMONING ME", style.RED)
+            time.sleep(0.5)
+            if game['cheat_mode']:
+                typewriter("This is why...", style.RED)
+                time.sleep(0.5)
+                typewriter("Cheating is bad, mkay?", style.YELLOW)
+                time.sleep(0.5)
+                typewriter("Pls tell kriv how you managed to make that special cheat file", style.YELLOW)
+                time.sleep(0.5)
+
+                typewriter("This is why you don't cheat, kids.", style.YELLOW)
+                time.sleep(0.5)
+
+            typewriter("Just hurry with your shopping man, It's just the same stuff as before ")
+
+        elif bvsc >= 3:
+            typewriter(":)", style.BLUE)
+            time.sleep(0.5)
+            typewriter("I'm glad to see you again!", style.GREEN)
+            time.sleep(0.5)
 
         pen = ["Pen", 999999999999999999999999999999999, 999999999999999999999999999999999999999999999999999999999999999999]
         
         while True:
+            item_costs = {
+                "Pen": 500,
+                "Infinity Heal": 200,
+                "Infinity Buff" : 200,
+                "Level Up (Cheaper)": 50*game["level"]
+            }
             for idx, (item, cost) in enumerate(item_costs.items(), start=1):
                 print(f'{idx}. {item}: {cost} gold')
                 time.sleep(0.1)
             i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
 
             if i == "exit":
-                typewriter("\nThank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
+                if bsvc == 0:
+                    typewriter("Thank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
+                elif bsvc == 1:
+                    typewriter("I hope you found what you were looking for...", style.YELLOW)
+                elif bsvc == 2:
+                    typewriter("Just leave and don't come back, cause like im getting kinda annoyed...", style.RED)
+                    time.sleep(5)
+                    typewriter("Seriously, just go away.", style.RED)
+                    time.sleep(1)
+                    typewriter("I'm sorry for shouting at you, will you forgive me?")
+                    x = True if input(" (y/n) >>> ").strip().lower() == "y" else False
+                    if x:
+                        typewriter("Thank you for forgiving me!", style.GREEN)
+                        typewriter("here's a little something for you...", style.GREEN)
+                        time.sleep(0.5)
+                        print(f" {style.YELLOW}+500 gold{style.RESET}")
+                        typewriter("I gave you 500 gold, :)", style.GREEN)
+                    else:
+                        typewriter("I understand, I'll try to be better.", style.YELLOW)
+                elif bsvc >= 3:
+                    typewriter("cya! :)", style.GREEN)
                 time.sleep(5)
                 break
             elif i == "Level Up (Cheaper)":
@@ -597,6 +702,7 @@ def random_encounter(game):
             time.sleep(2)
             os.system('cls' if os.name == 'nt' else 'clear')
 
+        bvsc += 1
         return game
 
 # Equip a weapon from the arsenal
@@ -712,11 +818,11 @@ def shop(game):
 # Main game loop
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
-    game = init_new_game()
+
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
     i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
-    game = json_load() if i == "Y" else init_new_game()
+    game = json_load() if i == "Y" else init_new_game(game)
 
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
