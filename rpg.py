@@ -524,7 +524,7 @@ def random_encounter(game):
             item = r.choice(items)
 
             # Check if item is a weapon
-            if item in [w[0] for w in weapon_stats]:
+            if item in weapon_stats:
                 # Only add if not already owned
                 if not item in game["weapons"]:
                     game["weapons"].append(weapon_stats[item])
@@ -792,7 +792,7 @@ def shop(game):
                 typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
             else:
                 typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
-        elif choice in [w[0] for w in weapon_stats]:
+        elif choice in weapon_stats:
             if game['gold'] >= item_costs[choice]:
                 game["gold"] -= item_costs[choice]
                 game["weapons"].append(weapon_stats[choice])
