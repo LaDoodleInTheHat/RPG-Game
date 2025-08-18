@@ -115,7 +115,7 @@ On start, allow loading from an existing save file. 👍
     Must do this 👍
 """
 
-import time, random as r, math, os, sys, json
+import time, random as r, os, json
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -368,6 +368,7 @@ def use_item(game):
 
 # Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
+    global bsvc
     spinner(1, 0.1)
 
     # Monster format: [name, hp, damage, reward, chance]
@@ -585,7 +586,7 @@ def random_encounter(game):
             typewriter("It's you", style.YELLOW)
             time.sleep(0.5)
             if game['cheat_mode']:
-                typewriter("Still wonder how much cheating you do...")
+                typewriter("Still wonder how much cheating you do...", style.RED)
                 time.sleep(0.5)
 
             if "LaDoodle's Hat" in game['artifacts']:
@@ -597,7 +598,7 @@ def random_encounter(game):
                     game['artifacts'].remove("LaDoodle's Hat")
                     typewriter("Thank you! I rlly appreciate it.", style.GREEN)
                     game["gold"] += 100
-                    print(f"{style.BOLD} +100 gold{style.RESET}")
+                    print(f"{style.BOLD}{style.YELLOW} +100 gold{style.RESET}")
                     typewriter("Also I gave you some gold for giving it back :)", style.GREEN)
                 else:
                     typewriter("That's too bad. I really want it back.", style.YELLOW)
@@ -625,7 +626,7 @@ def random_encounter(game):
                 typewriter("This is why you don't cheat, kids.", style.YELLOW)
                 time.sleep(0.5)
 
-            typewriter("Just hurry with your shopping man, It's just the same stuff as before ")
+            typewriter("Just hurry with your shopping man, It's just the same stuff as before ", style.GREEN)
 
         elif bsvc >= 3:
             typewriter(":)", style.BLUE)
@@ -657,13 +658,13 @@ def random_encounter(game):
                     time.sleep(5)
                     typewriter("Seriously, just go away.", style.RED)
                     time.sleep(1)
-                    typewriter("I'm sorry for shouting at you, will you forgive me?")
+                    typewriter("I'm sorry for shouting at you, will you forgive me?", style.GREEN)
                     x = True if input(" (y/n) >>> ").strip().lower() == "y" else False
                     if x:
                         typewriter("Thank you for forgiving me!", style.GREEN)
                         typewriter("here's a little something for you...", style.GREEN)
                         time.sleep(0.5)
-                        print(f" {style.YELLOW}+500 gold{style.RESET}")
+                        print(f" {style.YELLOW}{style.BOLD}+500 gold{style.RESET}")
                         typewriter("I gave you 500 gold, :)", style.GREEN)
                     else:
                         typewriter("I understand, I'll try to be better.", style.YELLOW)
@@ -716,11 +717,12 @@ def equip(game):
         time.sleep(0.1)
     
     try:
-        game["equipped"] = int(input("\nChoose a weapon number >>> "))-1
+        game["equipped"] = int(input("\nChoose a weapon (#) >>> ")) - 1
     except Exception as e:
         print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
 
-    typewriter(f"{style.YELLOW}You have equipped the {style.UNDERLINE}{style.BOLD}{game['weapons'][game['equipped']]}")
+    typewriter(f"You have equipped the {game['weapons'][game['equipped']]}", style.BOLD)
+    return game
 
 # Print current game status
 def status(game):
@@ -738,7 +740,7 @@ def quit_game(game):
     
     print(f"{style.MAGENTA}Thank you for playing DOODLE R.P.G.!{style.RESET}")
 
-    time.sleep(7)
+    time.sleep(4)
     os.system('cls' if os.name == 'nt' else 'clear')
     return
 
@@ -829,56 +831,63 @@ def main():
     game = json_load() if i == "Y" else init_new_game()
 
     while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        try:
+            os.system('cls' if os.name == 'nt' else 'clear')
 
-        s = input(f" {style.BOLD}{style.BLUE} Enter Command (h for help) >>>{style.RESET} ")
+            s = input(f"{style.BOLD}{style.BLUE}Enter Command (h for help) >>>{style.RESET} ")
 
-        if s in ["help", "h"]:
-            print(f"""  
-    explore (or e) - descend to the next level and trigger encounter
-    status (or s) - show current HP, level, gold, inventory, equipped weapon
-    shop (or sh) - open the shop
-    use ( or u) - use a potion or scroll from inventory
-    equip (or eq) - equip a weapon from your arsenal
-    save - force save game to JSON
-    load - load from existing save file
-    help (or h) - list all commands
-    quit (or q) to prompt save and exit
-      {style.RESET}""")
-            time.sleep(5)
-        elif s in ["quit", "q"]:
-            quit_game(game)
-            return
-        elif s in ["die"] and game["cheat_mode"]:
-            print(f"{style.RED} > You have chosen to commit suicide. Game over!{style.RESET}")
-            game["hp"] = 0
-        elif s in ["win"] and game["cheat_mode"]:
-            print(f"\n {style.GREEN}> Win{style.RESET}")
-            game["level"] = 11
-        elif s in ["save"]:
-            json_save(game)
-        elif s in ["load"]:
-            game = json_load()
-        elif s in ["explore", "e"]:
-            game = random_encounter(game)
-        elif s in ["status", "s"]:
-            status(game)
-        elif s in ["shop", "sh"]:
-            game = shop(game)
-        elif s in ["use", "u"]:
-            game = use_item(game)
-        elif s in ["equip", "eq"]:
-            game = equip(game)
-        else:
-            print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
+            if s in ["help", "h"]:
+                print(f"""  
+        explore (or e) - descend to the next level and trigger encounter
+        status (or s) - show current HP, level, gold, inventory, equipped weapon
+        shop (or sh) - open the shop
+        use ( or u) - use a potion or scroll from inventory
+        equip (or eq) - equip a weapon from your arsenal
+        save - force save game to JSON
+        load - load from existing save file
+        help (or h) - list all commands
+        quit (or q) to prompt save and exit
+        {style.RESET}""")
+                time.sleep(5)
+            elif s in ["quit", "q"]:
+                quit_game(game)
+                return
+            elif s in ["die"] and game["cheat_mode"]:
+                print(f"{style.RED} > You have chosen to commit suicide. Game over!{style.RESET}")
+                game["hp"] = 0
+            elif s in ["win"] and game["cheat_mode"]:
+                print(f"\n {style.GREEN}> Win{style.RESET}")
+                game["level"] = 11
+            elif s in ["save"]:
+                json_save(game)
+            elif s in ["load"]:
+                game = json_load()
+            elif s in ["explore", "e"]:
+                game = random_encounter(game)
+            elif s in ["status", "s"]:
+                status(game)
+            elif s in ["shop", "sh"]:
+                game = shop(game)
+            elif s in ["use", "u"]:
+                game = use_item(game)
+            elif s in ["equip", "eq"]:
+                game = equip(game)
+            else:
+                print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
-        g = False if check_game_over(game) == "none" else True
-        
-        if g:
-            time.sleep(7)
-            return os.system('cls' if os.name == 'nt' else 'clear')
-        
-        time.sleep(3)
+            g = False if check_game_over(game) == "none" else True
+            
+            if g:
+                time.sleep(7)
+                return os.system('cls' if os.name == 'nt' else 'clear')
+            
+            time.sleep(2)
+        except KeyboardInterrupt:
+            print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
+            time.sleep(2)
+        except Exception as e:
+            print(f"{style.RED}\n > An error occurred: {e}{style.RESET}")
+            time.sleep(2)
 
 # Start the game
 if __name__ == "__main__":
