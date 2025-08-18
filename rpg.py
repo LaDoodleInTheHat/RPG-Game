@@ -741,7 +741,7 @@ def shop(game):
     return game
 
 def level_up_check(game):
-    if game["xp"] >= 150 * game["level"]:
+    if game["xp"] >= 175 * game["level"]:
         game["level"] += 1
         game["xp"] = 0
         game["max_hp"] += game["max_hp"] * 0.2
