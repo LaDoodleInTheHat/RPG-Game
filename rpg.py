@@ -181,16 +181,28 @@ def json_save(game):
     file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
     file_name = file_name if file_name.endswith(".json") else file_name+".json"
 
-    if os.path.exists(file_name) or file_name == '':
+    if file_name == '':
         print(f' {style.RED} > Invalid filename (either it already exists or blank) try again')
         json_save(game)
         return
-    try:
-        with open(file_name, 'w')as f:
-            json.dump(game, f)
-        print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
-    except Exception as e:
-        print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
+    elif os.path.exists(file_name):
+        if input(" Are you sure you want to overwrite this file? (y/n) >>> ").strip().lower() == 'y':
+            try:
+                with open(file_name, 'w')as f:
+                    json.dump(game, f)
+                print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+            except Exception as e:
+                print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
+        else:
+            return
+    else:
+        try:
+            with open(file_name, 'w')as f:
+                json.dump(game, f)
+            print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+        except Exception as e:
+            print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
+    
 
 # Typewriter effect for text output
 def typewriter(text, color=style.RESET):
@@ -912,8 +924,11 @@ def main():
 
             if check_game_over(game):
                 time.sleep(7)
-                return os.system('cls' if os.name == 'nt' else 'clear')
-
+                os.system('cls' if os.name == 'nt' else 'clear')
+                if input(f"{style.YELLOW} Would you like to restart ? (Y/N) >>> {style.RESET}").strip().upper() == "Y":
+                    return main()
+                else:
+                    return
             game = level_up_check(game)
 
             time.sleep(2)
