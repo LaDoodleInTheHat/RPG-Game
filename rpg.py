@@ -142,6 +142,10 @@ def spinner(duration, delay):
             time.sleep(delay)  
     print(style.CLEAR_LINE) 
 
+global bsvc
+
+bsvc = 0
+
 # Initialize a new game state dictionary
 def init_new_game():
     return {
@@ -363,7 +367,7 @@ def use_item(game):
         typewriter("You have no items to use!", style.RED)
 
 # Handle random encounters (monster, treasure, shopkeeper)
-def random_encounter(game, bsvc):
+def random_encounter(game):
     spinner(1, 0.1)
 
     # Monster format: [name, hp, damage, reward, chance]
@@ -701,7 +705,7 @@ def random_encounter(game, bsvc):
             os.system('cls' if os.name == 'nt' else 'clear')
 
         bsvc += 1
-        return game, bsvc
+        return game
 
 # Equip a weapon from the arsenal
 def equip(game):
@@ -815,7 +819,7 @@ def shop(game):
 
 # Main game loop
 def main():
-    bsvc = 0
+    
 
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -856,7 +860,7 @@ def main():
         elif s in ["load"]:
             game = json_load()
         elif s in ["explore", "e"]:
-            game, bsvc = random_encounter(game, bsvc)
+            game = random_encounter(game)
         elif s in ["status", "s"]:
             status(game)
         elif s in ["shop", "sh"]:
