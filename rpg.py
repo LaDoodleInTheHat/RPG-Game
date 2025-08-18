@@ -346,7 +346,7 @@ def random_encounter(game):
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
-                        if r.randint(1, 100) <= 100:
+                        if r.randint(1, 100) < 50:
                             typewriter("You successfully ran away!", style.GREEN)
                             return game
                         else:
@@ -741,7 +741,7 @@ def shop(game):
     return game
 
 def level_up_check(game):
-    if game["xp"] >= 500 * game["level"]:
+    if game["xp"] >= 150 * game["level"]:
         game["level"] += 1
         game["xp"] = 0
         game["max_hp"] += game["max_hp"] * 0.2
@@ -780,7 +780,6 @@ def main():
         help (or h) - list all commands
         quit (or q) to prompt save and exit
         {style.RESET}""")
-                time.sleep(5)
             elif s in ["quit", "q"]:
                 quit_game(game)
                 return
