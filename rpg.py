@@ -771,7 +771,7 @@ def shop(game):
         "Level Up": 300 * game["level"]
     }
 
-    typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:')
+    typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:', style.BOLD)
 
     while True:
         for idx, (item, cost) in enumerate(item_costs.items(), start=1):
