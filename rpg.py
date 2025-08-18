@@ -159,7 +159,8 @@ def init_new_game():
         ],     
         "equipped": 0,      
         "artifacts": [], 
-        "cheat_mode": False
+        "cheat_mode": False,
+        "xp": 0
     } if not os.path.exists('cheat') else {
         "level": 1,
         "hp": 9999,
@@ -171,7 +172,8 @@ def init_new_game():
         ],
         "equipped": 0,
         "artifacts": ["LaDoodle's Hat"],
-        "cheat_mode": True
+        "cheat_mode": True,
+        "xp": 0
     }
 
 # Save game state to JSON file
@@ -215,7 +217,8 @@ def json_load():
                 "weapons": list,
                 "equipped": int,
                 "artifacts": list,
-                "cheat_mode": bool
+                "cheat_mode": bool,
+                "xp": int
             }
 
             # Validate required keys and types
@@ -262,16 +265,17 @@ def json_load():
 def check_game_over(game):
     if game["hp"] <= 0:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
-        return "lost"
+        return True
     elif game["level"] == 11:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
         game["artifacts"].append("Drago's Egg")
-        return "won"
+        return True
     else:
-        return "none"
+        return False
 
 # To use an item
 def use_item(game):
+    
     if game["inventory"]:
         for i, items in enumerate(game["inventory"], start=1):
             print(f"{i}. {items}")
@@ -294,24 +298,33 @@ def use_item(game):
             game["inventory"].remove(item)
             typewriter(f"You used a {item} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
             time.sleep(0.5)
-            typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into your items...", style.YELLOW)
+            typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into you and your items...", style.YELLOW)
             print()
 
         # Large Health Potion: heals 50 HP
         elif item == 'Large Health Potion':
-            game["hp"] += 50
+            if game["hp"] + 50 > game["max_hp"]:
+                game["hp"] = game["max_hp"]
+            else:
+                game["hp"] += 50
             game["inventory"].remove(item)
             typewriter(f"You used a {item} and gained 50 hp!", style.GREEN)
 
         # Small Health Potion: heals 20 HP
         elif item == 'Small Health Potion':
-            game["hp"] += 20
+            if game["hp"] + 20 > game["max_hp"]:
+                game["hp"] = game["max_hp"]
+            else:
+                game["hp"] += 20
             game["inventory"].remove(item)
             typewriter(f"You used a {item} and gained 20 hp!", style.GREEN)
 
         # Elixir of Fortitude: heals 100 HP
         elif item == 'Elixir of Fortitude':
-            game["hp"] += 100
+            if game["hp"] + 100 > game["max_hp"]:
+                game["hp"] = game["max_hp"]
+            else:
+                game["hp"] += 100
             game["inventory"].remove(item)
             typewriter(f"You used an {item} and gained 100 hp!", style.GREEN)
 
@@ -358,6 +371,12 @@ def use_item(game):
             game["inventory"].remove(item)
             typewriter("You used an Infinity Buff and increased all your weapon's damage!", style.GREEN)
 
+        elif item == "Secret Map":
+            typewriter("Unfortunately the Secret map has no current use at this stage of development", style.YELLOW)
+            typewriter("But stay tuned for more!", style.GREEN)
+
+            time.sleep(1)
+
         # Default: item cannot be used in battle
         else:
             typewriter(f"You can't use {item} right now!", style.RED)
@@ -365,35 +384,36 @@ def use_item(game):
         return game
     else:
         typewriter("You have no items to use!", style.RED)
+        return game
 
 # Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
     global bsvc
     spinner(1, 0.1)
 
-    # Monster format: [name, hp, damage, reward, chance]
+    # Monster format: [name, hp, damage, reward, chance, xp drop]
     monsters = [
-        ["VENOM DRAKE", 110, 35, 70, 180],
-        ["NIGHT STALKER", 130, 45, 90, 340],
-        ["CRYPT LICH", 170, 60, 120, 520],
-        ["STONE GOLEM", 220, 80, 160, 700],
-        ["VOID SHADE", 260, 100, 200, 850],
-        ["GORM", 320, 130, 300, 950],
-        ["BLADE PHANTOM", 400, 180, 500, 1000],
+        ["VENOM DRAKE", 110, 35, 20, 180, 50],
+        ["NIGHT STALKER", 130, 45, 30, 340, 70],
+        ["CRYPT LICH", 170, 60, 50, 520, 100],
+        ["STONE GOLEM", 220, 80, 90, 700, 130],
+        ["VOID SHADE", 260, 100, 120, 850, 150],
+        ["GORM", 320, 200, 250, 950, 250],
+        ["BLADE PHANTOM", 400, 250, 500, 1000, 500],
     ]
 
     # Adjust monster chances based on level
     level = game["level"]
+    
     bias = min(max(level - 1, 0), 9)  # 0 to 9
     half = len(monsters)//2
     bias_shift = bias*2
     new_monsters = []
     
-    for i, (name, hp, damage, reward, chance) in enumerate(monsters):
+    for i, (name, hp, damage, reward, chance, xp) in enumerate(monsters):
         shift = bias_shift if i >= half else - bias_shift
         new_chance = max(0,min(1000, chance + shift))  
-        new_monsters.append([name, hp, damage, reward, new_chance])
-    
+        new_monsters.append([name, hp, damage, reward, new_chance, xp])
     monsters = new_monsters
     try:
         i = r.randint(0, 100) if not game['cheat_mode'] else int(input("Monster : (0-79), Treasure : (80-99), Shopkeeper : (100) >>> "))
@@ -416,6 +436,7 @@ def random_encounter(game):
                 monster_name = monster[0]
                 monster_damage = monster[2]
                 reward_gold = monster[3]
+                xp_drop = monster[5]
 
                 # Battle loop
                 while monster_hp > 0 and game["hp"] > 0:
@@ -484,7 +505,9 @@ def random_encounter(game):
                 if monster_hp <= 0:
                     typewriter(f"{monster_name} is defeated!", style.MAGENTA)
                     typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
+                    typewriter(f"You gain {xp_drop} XP!", style.GREEN)
                     game["gold"] += reward_gold
+                    game["xp"] += xp_drop
 
                 time.sleep(3)
                 return game           
@@ -540,7 +563,7 @@ def random_encounter(game):
                     game['artifacts'].append(item)
                     typewriter(f"You found a {item}!", style.CYAN)
                 else:
-                    typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
+                    typewriter(f"You found a {item}, but you already have one. It magicly turns into 50 gold.", style.YELLOW)
                     game["gold"] += 50
             
             # Otherwise, add to inventory
@@ -641,7 +664,7 @@ def random_encounter(game):
                 "Pen": 500,
                 "Infinity Heal": 200,
                 "Infinity Buff" : 200,
-                "Level Up (Cheaper)": 50*game["level"]
+                "Level Up": 300*game["level"]
             }
             for idx, (item, cost) in enumerate(item_costs.items(), start=1):
                 print(f'{idx}. {item}: {cost} gold')
@@ -749,26 +772,25 @@ def shop(game):
 
     # Weapons and their damage ranges
     weapon_stats = {
-        "Iron Sword": ["Iron Sword", 5, 10],
-        "Steel Axe": ["Steel Axe", 8, 16],
-        "Enchanted Dagger": ["Enchanted Dagger", 4, 14],
+        "Iron Sword": ["Iron Sword", 20, 50],
+        "Steel Axe": ["Steel Axe", 30, 55],
+        "Enchanted Dagger": ["Enchanted Dagger", 15, 70],
         "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
     }
 
     item_costs = {
         "Small Health Potion": 30,
         "Large Health Potion": 90,
-        "Magic Scroll": 120,
-        "Secret Map": 150,
+        "Magic Scroll": 350,
+        "Secret Map": 1000,
         "Iron Sword": 100,
         "Steel Axe": 200,
         "Enchanted Dagger": 150,
         "Phoenix Feather": 300,
         "Elixir of Fortitude": 200,
-        "Mystic Cloak": 250,
+        "Mystic Cloak": 600,
         "(Totally) Mjölnir": 500,
         "Shadow Amulet": 350,
-        "Level Up": 300 * game["level"]
     }
 
     typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:', style.BOLD)
@@ -777,6 +799,13 @@ def shop(game):
         for idx, (item, cost) in enumerate(item_costs.items(), start=1):
             print(f'{idx}. {item}: {cost} gold')
             time.sleep(0.1)
+
+        print()
+        typewriter("Weapons:")
+        print()
+        for item, (name, min_dmg, max_dmg) in weapon_stats.items():
+            print(f"{style.YELLOW} {name}: {min_dmg}-{max_dmg} dmg {style.RESET}")
+
         print(f"{style.YELLOW} Current Gold: {game['gold']} {style.RESET}")
         try:
             choice = str(input(f"{style.CYAN}Enter the item you wish to buy (or 'exit' to leave) >>> {style.RESET}")).strip()
@@ -787,13 +816,6 @@ def shop(game):
         if choice == "exit":
             typewriter(f"Thank you for visiting the shop!", style.BLUE)
             break
-        elif choice == 'Level Up':
-            if game['gold']>= item_costs["Level Up"]:
-                game["gold"] -= item_costs[choice]
-                game["level"] += 1
-                typewriter(f"You have leveled up to level {game['level']}!", style.GREEN)
-            else:
-                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
         elif choice in weapon_stats:
             if game['gold'] >= item_costs[choice]:
                 game["gold"] -= item_costs[choice]
@@ -816,6 +838,19 @@ def shop(game):
 
     time.sleep(2)
     print()
+
+    return game
+
+def level_up_check(game):
+    if game["xp"] >= 500 * game["level"]:
+        game["level"] += 1
+        game["xp"] = 0
+        game["max_hp"] += game["max_hp"] * 0.2
+        game["hp"] = game["max_hp"]
+        typewriter(f"Congratulations! You leveled up to : {game['level']}!", style.GREEN)
+        typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
+
+        time.sleep(3)
 
     return game
 
@@ -875,12 +910,12 @@ def main():
             else:
                 print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
-            g = False if check_game_over(game) == "none" else True
-            
-            if g:
+            if check_game_over(game):
                 time.sleep(7)
                 return os.system('cls' if os.name == 'nt' else 'clear')
-            
+
+            game = level_up_check(game)
+
             time.sleep(2)
         except KeyboardInterrupt:
             print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
