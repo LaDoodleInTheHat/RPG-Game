@@ -91,8 +91,7 @@ def json_save(game):
                 json.dump(game, f)
             print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
         except Exception as e:
-            print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
-    
+            print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}") 
 
 # Typewriter effect for text output
 def typewriter(text, color=style.RESET):
@@ -813,7 +812,7 @@ def main():
                 print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
             if check_game_over(game):
-                time.sleep(7)
+                input("Press Enter to continue > ")
                 os.system('cls' if os.name == 'nt' else 'clear')
                 if input(f"{style.YELLOW} Would you like to restart ? (Y/N) >>> {style.RESET}").strip().upper() == "Y":
                     return main()
@@ -821,13 +820,13 @@ def main():
                     return
             game = level_up_check(game)
 
-            time.sleep(2)
+            input("Press Enter to continue > ")
         except KeyboardInterrupt:
             print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
-            time.sleep(2)
+            input("Press Enter to continue > ")
         except Exception as e:
             print(f"{style.RED}\n > An error occurred: {e}{style.RESET}")
-            time.sleep(2)
+            input("Press Enter to continue > ")
 
 # Start the game
 if __name__ == "__main__":
