@@ -32,8 +32,6 @@ def spinner(duration, delay):
             time.sleep(delay)  
     print(style.CLEAR_LINE) 
 
-global bsvc
-
 bsvc = 0
 
 # Initialize a new game state dictionary
@@ -757,8 +755,6 @@ def level_up_check(game):
 
 # Main game loop
 def main():
-    
-
     os.system('cls' if os.name == 'nt' else 'clear')
 
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
