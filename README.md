@@ -15,3 +15,5 @@ You use a command line to explore somewhere, and level up, here are the commands
  - quit (or q) to prompt save and exit
 
 Try it by running `initiate.bat`
+
+Also you kinda need python (prefereably the latest version) and it needs to be a path variable. :)
