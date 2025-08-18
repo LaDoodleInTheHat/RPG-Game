@@ -117,8 +117,6 @@ On start, allow loading from an existing save file. 👍
 
 import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
 
-bsvc = 0
-
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
     BLACK = '\033[30m'
@@ -145,7 +143,7 @@ def spinner(duration, delay):
     print(style.CLEAR_LINE) 
 
 # Initialize a new game state dictionary
-def init_new_game(game):
+def init_new_game():
     return {
         "level": 1,            
         "hp": 100,               
@@ -365,7 +363,7 @@ def use_item(game):
         typewriter("You have no items to use!", style.RED)
 
 # Handle random encounters (monster, treasure, shopkeeper)
-def random_encounter(game):
+def random_encounter(game, bsvc):
     spinner(1, 0.1)
 
     # Monster format: [name, hp, damage, reward, chance]
@@ -549,7 +547,7 @@ def random_encounter(game):
     
     elif i <= 100:
         # Shopkeeper encounter
-        if bvsc == 0:
+        if bsvc == 0:
             typewriter("Hmmmmmm...", style.YELLOW)
             time.sleep(5)
             typewriter("An adventurer...", style.YELLOW)
@@ -569,7 +567,7 @@ def random_encounter(game):
                 typewriter("Meh, doesn't rlly matter that much anyway", style.YELLOW)
                 time.sleep(0.5)
             typewriter("\nAlso btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
-        elif bvsc == 1:
+        elif bsvc == 1:
             typewriter("Bro, how did I even flippin get here?", style.YELLOW)
             time.sleep(0.5)
             typewriter("Did I just... teleport?", style.YELLOW)
@@ -603,7 +601,7 @@ def random_encounter(game):
             
             typewriter("Now that I'm here, why don't you just buy something.", style.GREEN)
 
-        elif bvsc == 2:
+        elif bsvc == 2:
             typewriter("...", style.RED)
             time.sleep(3)
             typewriter("WHAT THE HELL MAN", style.RED)
@@ -625,7 +623,7 @@ def random_encounter(game):
 
             typewriter("Just hurry with your shopping man, It's just the same stuff as before ")
 
-        elif bvsc >= 3:
+        elif bsvc >= 3:
             typewriter(":)", style.BLUE)
             time.sleep(0.5)
             typewriter("I'm glad to see you again!", style.GREEN)
@@ -702,8 +700,8 @@ def random_encounter(game):
             time.sleep(2)
             os.system('cls' if os.name == 'nt' else 'clear')
 
-        bvsc += 1
-        return game
+        bsvc += 1
+        return game, bsvc
 
 # Equip a weapon from the arsenal
 def equip(game):
@@ -817,17 +815,19 @@ def shop(game):
 
 # Main game loop
 def main():
+    bsvc = 0
+
     os.system('cls' if os.name == 'nt' else 'clear')
 
     print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
     i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
-    game = json_load() if i == "Y" else init_new_game(game)
+    game = json_load() if i == "Y" else init_new_game()
 
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        s = input(f" {style.BOLD}{style.BLUE}>>>{style.RESET} ")
+        s = input(f" {style.BOLD}{style.BLUE} Enter Command (h for help) >>>{style.RESET} ")
 
         if s in ["help", "h"]:
             print(f"""  
@@ -856,7 +856,7 @@ def main():
         elif s in ["load"]:
             game = json_load()
         elif s in ["explore", "e"]:
-            game = random_encounter(game)
+            game, bsvc = random_encounter(game, bsvc)
         elif s in ["status", "s"]:
             status(game)
         elif s in ["shop", "sh"]:
