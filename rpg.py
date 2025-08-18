@@ -115,7 +115,7 @@ On start, allow loading from an existing save file. 👍
     Must do this 👍
 """
 
-import time, random as r, math, os, sys, json, pygame as pg, pygwidgets as pgw
+import time, random as r, math, os, sys, json
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
