@@ -478,7 +478,6 @@ def LaDoodle_dialouge(game):
 
     return game
 
-
 # Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
     global bsvc
@@ -725,7 +724,7 @@ def random_encounter(game):
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
-                        if r.randint(1, 100) < 50:
+                        if r.randint(0, 100) < 75 - 3*game['level']:
                             typewriter("You successfully ran away!", style.GREEN)
                             return game
                         else:
@@ -743,7 +742,7 @@ def random_encounter(game):
                             game["hp"] -= mdmg
                             typewriter(his_attack, style.RED)
                     elif qu == "counter":
-                        if r.randint(1, 100) <= 50:
+                        if r.randint(0, 100) <= 75 - 3*game['level']:
                             his_attack = f"{monster_name} tried to strike you, but failed!"
                             dmg = r.randint(max(dmg, mdmg)-min(dmg, mdmg), (max(dmg, mdmg)-min(dmg, mdmg))*2)
                             my_attack = f"You counter {monster_name}'s attack for {dmg}!"
