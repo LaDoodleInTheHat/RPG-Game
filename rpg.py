@@ -52,7 +52,13 @@ def init_new_game():
         "equipped": 0,      
         "artifacts": [], 
         "cheat_mode": False,
-        "xp": 0
+        "xp": 0,
+        "skill_set": {
+            "strength": 1,
+            "agility": 1,
+            "luck": 1,
+            "accuracy": 1,
+        }
     } if not os.path.exists('cheat') else {
         "level": 1,
         "hp": 9999,
@@ -65,7 +71,13 @@ def init_new_game():
         "equipped": 0,
         "artifacts": ["LaDoodle's Hat"],
         "cheat_mode": True,
-        "xp": 0
+        "xp": 0,
+        "skill_set": {
+            "strength": 1,
+            "agility": 1,
+            "luck": 1,
+            "accuracy": 1,
+        }
     }
 
 # Save game state to JSON file
@@ -121,7 +133,8 @@ def json_load():
                 "equipped": int,
                 "artifacts": list,
                 "cheat_mode": bool,
-                "xp": int
+                "xp": int,
+                "skill_set": dict
             }
 
             # Validate required keys and types
@@ -143,6 +156,15 @@ def json_load():
                         weapon[2] > 0 and
                         weapon[2] > weapon[1]):
                     print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
+                    return None
+
+            # Validate skill_set format
+            for skill, level in game_state["skill_set"].items():
+                if skill not in ["strength", "agility", "luck", "accuracy"]:
+                    print(f"{style.RED} > Error loading file, Invalid skill: {skill}{style.RESET}")
+                    return None
+                if not isinstance(level, int) or level < 1:
+                    print(f"{style.RED} > Error loading file, Invalid level for skill {skill}{style.RESET}")
                     return None
 
             # Validate artifacts format
@@ -201,7 +223,7 @@ def use_item(game):
             game["inventory"].remove(item)
             typewriter(f"You used a {item} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
             time.sleep(0.5)
-            typewriter("🤔 Your cloak mysteriously dissipated and got absorbed into you and your items...", style.YELLOW)
+            typewriter("Your cloak mysteriously dissipated and got absorbed into you and your items...", style.YELLOW)
             print()
 
         # Large Health Potion: heals 50 HP
@@ -493,199 +515,199 @@ def random_encounter(game):
     monsters = [
         # Level 1 (Player: HP 100, Weapon 10-20)
         [
-            ["Slime", 60, 18, 30, 10, 35],
-            ["Rat", 65, 20, 32, 20, 38],
-            ["Goblin", 70, 22, 36, 30, 40],
-            ["Bat", 58, 17, 28, 40, 32],
-            ["Wild Mouse", 62, 19, 30, 50, 33],
-            ["Tiny Spider", 55, 16, 27, 60, 30],
-            ["Lost Chick", 53, 15, 25, 70, 28],
-            ["Baby Snake", 57, 18, 29, 80, 31],
-            ["Mischievous Pixie", 60, 19, 31, 90, 34],
-            ["Angry Squirrel", 56, 17, 27, 100, 30],
-            ["Bandit Initiate", 68, 21, 38, 110, 42],
-            ["Forest Beetle", 59, 18, 29, 120, 32],
+            ["Slime", 90, 28, 50, 10, 55],
+            ["Rat", 95, 32, 54, 20, 58],
+            ["Goblin", 100, 36, 60, 30, 60],
+            ["Bat", 88, 27, 48, 40, 52],
+            ["Wild Mouse", 92, 29, 50, 50, 53],
+            ["Tiny Spider", 85, 26, 47, 60, 50],
+            ["Lost Chick", 83, 25, 45, 70, 48],
+            ["Baby Snake", 87, 28, 49, 80, 51],
+            ["Mischievous Pixie", 90, 29, 51, 90, 54],
+            ["Angry Squirrel", 86, 27, 47, 100, 50],
+            ["Bandit Initiate", 98, 31, 68, 110, 62],
+            ["Forest Beetle", 89, 28, 49, 120, 52],
         ],
-        # Level 2 (Player: HP ~120, Weapon 10-20 or better)
+        # Level 2
         [
-            ["Wolf", 85, 24, 40, 10, 45],
-            ["Bandit", 90, 26, 44, 20, 48],
-            ["Goblin Brute", 95, 28, 48, 30, 52],
-            ["Snake", 80, 22, 36, 40, 40],
-            ["Wild Dog", 88, 23, 38, 50, 42],
-            ["Forest Spider", 86, 21, 34, 60, 39],
-            ["Bandit Scout", 92, 25, 42, 70, 47],
-            ["Angry Crow", 78, 20, 32, 80, 36],
-            ["Wild Cat", 85, 23, 38, 90, 44],
-            ["Mischievous Goblin", 83, 22, 35, 100, 41],
-            ["Bandit Slinger", 97, 27, 50, 110, 54],
-            ["Forest Snake", 87, 24, 39, 120, 43],
+            ["Wolf", 125, 34, 70, 10, 75],
+            ["Bandit", 130, 36, 74, 20, 78],
+            ["Goblin Brute", 135, 38, 78, 30, 82],
+            ["Snake", 120, 32, 66, 40, 70],
+            ["Wild Dog", 128, 33, 68, 50, 72],
+            ["Forest Spider", 126, 31, 64, 60, 69],
+            ["Bandit Scout", 132, 35, 72, 70, 77],
+            ["Angry Crow", 118, 30, 62, 80, 66],
+            ["Wild Cat", 125, 33, 68, 90, 74],
+            ["Mischievous Goblin", 123, 32, 65, 100, 71],
+            ["Bandit Slinger", 137, 37, 80, 110, 84],
+            ["Forest Snake", 127, 34, 69, 120, 73],
         ],
         # Level 3
         [
-            ["Skeleton", 65, 20, 40, 10, 50],
-            ["Wild Boar", 80, 22, 45, 20, 55],
-            ["Orc", 100, 25, 50, 30, 60],
-            ["Zombie Dog", 70, 18, 35, 40, 45],
-            ["Bandit Archer", 85, 21, 38, 50, 48],
-            ["Ghoul", 75, 19, 36, 60, 47],
-            ["Forest Wolf", 78, 20, 39, 70, 52],
-            ["Wild Ram", 82, 21, 41, 80, 54],
-            ["Cave Bat", 68, 17, 33, 90, 43],
-            ["Angry Boar", 72, 18, 37, 100, 46],
+            ["Skeleton", 105, 30, 70, 10, 80],
+            ["Wild Boar", 120, 32, 75, 20, 85],
+            ["Orc", 140, 35, 80, 30, 90],
+            ["Zombie Dog", 110, 28, 65, 40, 75],
+            ["Bandit Archer", 125, 31, 68, 50, 78],
+            ["Ghoul", 115, 29, 66, 60, 77],
+            ["Forest Wolf", 118, 30, 69, 70, 82],
+            ["Wild Ram", 122, 31, 71, 80, 84],
+            ["Cave Bat", 108, 27, 63, 90, 73],
+            ["Angry Boar", 112, 28, 67, 100, 76],
         ],
         # Level 4
         [
-            ["Zombie", 110, 28, 55, 10, 65],
-            ["Bandit Leader", 130, 32, 60, 20, 70],
-            ["Orc Warrior", 150, 36, 70, 30, 80],
-            ["Ghoul", 120, 30, 50, 40, 60],
-            ["Wild Bear", 140, 34, 65, 50, 75],
-            ["Forest Troll", 125, 31, 58, 60, 68],
-            ["Bandit Swordsman", 135, 33, 62, 70, 72],
-            ["Cave Spider", 115, 29, 53, 80, 63],
-            ["Angry Bear", 128, 32, 59, 90, 69],
-            ["Wild Lynx", 118, 28, 54, 100, 64],
+            ["Zombie", 170, 38, 95, 10, 105],
+            ["Bandit Leader", 190, 42, 100, 20, 110],
+            ["Orc Warrior", 210, 46, 110, 30, 120],
+            ["Ghoul", 180, 40, 90, 40, 100],
+            ["Wild Bear", 200, 44, 105, 50, 115],
+            ["Forest Troll", 185, 41, 98, 60, 108],
+            ["Bandit Swordsman", 195, 43, 102, 70, 112],
+            ["Cave Spider", 175, 39, 93, 80, 103],
+            ["Angry Bear", 188, 42, 99, 90, 109],
+            ["Wild Lynx", 178, 38, 94, 100, 104],
         ],
         # Level 5
         [
-            ["Giant Spider", 160, 40, 80, 10, 90],
-            ["Ghoul", 180, 44, 90, 20, 100],
-            ["Troll", 200, 48, 100, 30, 110],
-            ["Swamp Lizard", 170, 42, 85, 40, 95],
-            ["Bandit Mage", 190, 46, 95, 50, 105],
-            ["Forest Ogre", 175, 43, 88, 60, 98],
-            ["Wild Crocodile", 185, 45, 92, 70, 102],
-            ["Cave Troll", 165, 41, 83, 80, 93],
-            ["Angry Troll", 178, 44, 89, 90, 99],
-            ["Swamp Rat", 168, 40, 81, 100, 91],
+            ["Giant Spider", 240, 60, 120, 10, 130],
+            ["Ghoul", 260, 64, 130, 20, 140],
+            ["Troll", 280, 68, 140, 30, 150],
+            ["Swamp Lizard", 250, 62, 125, 40, 135],
+            ["Bandit Mage", 270, 66, 135, 50, 145],
+            ["Forest Ogre", 255, 63, 128, 60, 138],
+            ["Wild Crocodile", 265, 65, 132, 70, 142],
+            ["Cave Troll", 245, 61, 123, 80, 133],
+            ["Angry Troll", 258, 64, 129, 90, 139],
+            ["Swamp Rat", 248, 60, 121, 100, 131],
         ],
         # Level 6
         [
-            ["Dire Wolf", 210, 52, 110, 10, 120],
-            ["Dark Mage", 230, 56, 120, 20, 130],
-            ["Ogre", 250, 60, 130, 30, 140],
-            ["Vampire", 220, 54, 115, 40, 125],
-            ["Forest Troll", 240, 58, 125, 50, 135],
-            ["Bandit Captain", 225, 55, 118, 60, 128],
-            ["Cave Ogre", 235, 57, 122, 70, 132],
-            ["Wild Panther", 215, 53, 113, 80, 123],
-            ["Angry Ogre", 228, 56, 119, 90, 129],
-            ["Dark Sorcerer", 218, 52, 111, 100, 121],
+            ["Dire Wolf", 310, 72, 160, 10, 170],
+            ["Dark Mage", 330, 76, 170, 20, 180],
+            ["Ogre", 350, 80, 180, 30, 190],
+            ["Vampire", 320, 74, 165, 40, 175],
+            ["Forest Troll", 340, 78, 175, 50, 185],
+            ["Bandit Captain", 325, 75, 168, 60, 178],
+            ["Cave Ogre", 335, 77, 172, 70, 182],
+            ["Wild Panther", 315, 73, 163, 80, 173],
+            ["Angry Ogre", 328, 76, 169, 90, 179],
+            ["Dark Sorcerer", 318, 72, 161, 100, 171],
         ],
         # Level 7
         [
-            ["Vampire Bat", 260, 64, 140, 10, 150],
-            ["Wraith", 280, 68, 150, 20, 160],
-            ["Minotaur", 300, 72, 160, 30, 170],
-            ["Specter", 270, 66, 145, 40, 155],
-            ["Cave Ogre", 290, 70, 155, 50, 165],
-            ["Bandit Berserker", 275, 67, 148, 60, 158],
-            ["Wild Tiger", 285, 69, 152, 70, 162],
-            ["Angry Minotaur", 265, 65, 143, 80, 153],
-            ["Dark Wraith", 278, 68, 149, 90, 159],
-            ["Spectral Bat", 268, 64, 141, 100, 151],
+            ["Vampire Bat", 390, 84, 190, 10, 200],
+            ["Wraith", 410, 88, 200, 20, 210],
+            ["Minotaur", 430, 92, 210, 30, 220],
+            ["Specter", 400, 86, 195, 40, 205],
+            ["Cave Ogre", 420, 90, 205, 50, 215],
+            ["Bandit Berserker", 405, 87, 198, 60, 208],
+            ["Wild Tiger", 415, 89, 202, 70, 212],
+            ["Angry Minotaur", 395, 85, 193, 80, 203],
+            ["Dark Wraith", 408, 88, 199, 90, 209],
+            ["Spectral Bat", 398, 84, 191, 100, 201],
         ],
         # Level 8
         [
-            ["Fire Elemental", 320, 76, 170, 10, 180],
-            ["Ice Golem", 340, 80, 180, 20, 190],
-            ["Werewolf", 360, 84, 190, 30, 200],
-            ["Frost Bat", 330, 78, 175, 40, 185],
-            ["Bandit Captain", 350, 82, 185, 50, 195],
-            ["Forest Werewolf", 335, 79, 178, 60, 188],
-            ["Wild Rhino", 345, 81, 182, 70, 192],
-            ["Cave Golem", 325, 77, 173, 80, 183],
-            ["Angry Golem", 338, 80, 179, 90, 189],
-            ["Ice Elemental", 328, 76, 171, 100, 181],
+            ["Fire Elemental", 480, 96, 220, 10, 230],
+            ["Ice Golem", 500, 100, 230, 20, 240],
+            ["Werewolf", 520, 104, 240, 30, 250],
+            ["Frost Bat", 490, 98, 225, 40, 235],
+            ["Bandit Captain", 510, 102, 235, 50, 245],
+            ["Forest Werewolf", 495, 99, 228, 60, 238],
+            ["Wild Rhino", 505, 101, 232, 70, 242],
+            ["Cave Golem", 485, 97, 223, 80, 233],
+            ["Angry Golem", 498, 100, 229, 90, 239],
+            ["Ice Elemental", 488, 96, 221, 100, 231],
         ],
         # Level 9
         [
-            ["Stone Guardian", 380, 88, 200, 10, 210],
-            ["Necromancer", 400, 92, 210, 20, 220],
-            ["Cyclops", 420, 96, 220, 30, 230],
-            ["Shadow Beast", 390, 90, 205, 40, 215],
-            ["Forest Spirit", 410, 94, 215, 50, 225],
-            ["Bandit Sorcerer", 395, 91, 208, 60, 218],
-            ["Wild Elephant", 405, 93, 212, 70, 222],
-            ["Cave Cyclops", 385, 89, 203, 80, 213],
-            ["Angry Cyclops", 398, 92, 209, 90, 219],
-            ["Shadow Elemental", 388, 88, 201, 100, 211],
+            ["Stone Guardian", 570, 108, 250, 10, 260],
+            ["Necromancer", 590, 112, 260, 20, 270],
+            ["Cyclops", 610, 116, 270, 30, 280],
+            ["Shadow Beast", 580, 110, 255, 40, 265],
+            ["Forest Spirit", 600, 114, 265, 50, 275],
+            ["Bandit Sorcerer", 585, 111, 258, 60, 268],
+            ["Wild Elephant", 595, 113, 262, 70, 272],
+            ["Cave Cyclops", 575, 109, 253, 80, 263],
+            ["Angry Cyclops", 588, 112, 259, 90, 269],
+            ["Shadow Elemental", 578, 108, 251, 100, 261],
         ],
         # Level 10
         [
-            ["Thunder Lizard", 440, 100, 230, 10, 240],
-            ["Shadow Assassin", 460, 104, 240, 20, 250],
-            ["Giant", 480, 108, 250, 30, 260],
-            ["Storm Hawk", 450, 102, 235, 40, 245],
-            ["Bandit King", 470, 106, 245, 50, 255],
-            ["Forest Giant", 455, 103, 238, 60, 248],
-            ["Wild Buffalo", 465, 105, 242, 70, 252],
-            ["Cave Giant", 445, 101, 233, 80, 243],
-            ["Angry Giant", 458, 104, 239, 90, 249],
-            ["Thunder Elemental", 448, 100, 231, 100, 241],
+            ["Thunder Lizard", 660, 120, 280, 10, 290],
+            ["Shadow Assassin", 680, 124, 290, 20, 300],
+            ["Giant", 700, 128, 300, 30, 310],
+            ["Storm Hawk", 670, 122, 285, 40, 295],
+            ["Bandit King", 690, 126, 295, 50, 305],
+            ["Forest Giant", 675, 123, 288, 60, 298],
+            ["Wild Buffalo", 685, 125, 292, 70, 302],
+            ["Cave Giant", 665, 121, 283, 80, 293],
+            ["Angry Giant", 678, 124, 289, 90, 299],
+            ["Thunder Elemental", 668, 120, 281, 100, 291],
         ],
         # Level 11
         [
-            ["Hellhound", 500, 112, 260, 10, 270],
-            ["Specter", 520, 116, 270, 20, 280],
-            ["Demon", 540, 120, 280, 30, 290],
-            ["Dark Knight", 510, 114, 265, 40, 275],
-            ["Ancient Zombie", 530, 118, 275, 50, 285],
-            ["Forest Demon", 515, 115, 268, 60, 278],
-            ["Wild Mammoth", 525, 117, 272, 70, 282],
-            ["Cave Demon", 505, 113, 263, 80, 273],
-            ["Angry Demon", 518, 116, 269, 90, 279],
-            ["Spectral Knight", 508, 112, 261, 100, 271],
+            ["Hellhound", 750, 132, 310, 10, 320],
+            ["Specter", 770, 136, 320, 20, 330],
+            ["Demon", 790, 140, 330, 30, 340],
+            ["Dark Knight", 760, 134, 315, 40, 325],
+            ["Ancient Zombie", 780, 138, 325, 50, 335],
+            ["Forest Demon", 765, 135, 318, 60, 328],
+            ["Wild Mammoth", 775, 137, 322, 70, 332],
+            ["Cave Demon", 755, 133, 313, 80, 323],
+            ["Angry Demon", 768, 136, 319, 90, 329],
+            ["Spectral Knight", 758, 132, 311, 100, 321],
         ],
         # Level 12
         [
-            ["Forest Spirit", 560, 124, 290, 10, 300],
-            ["Lich", 580, 128, 300, 20, 310],
-            ["Golem King", 600, 132, 310, 30, 320],
-            ["Sand Worm", 570, 126, 295, 40, 305],
-            ["Thunder Hawk", 590, 130, 305, 50, 315],
-            ["Forest Lich", 575, 127, 298, 60, 308],
-            ["Wild Gorilla", 585, 129, 302, 70, 312],
-            ["Cave Lich", 565, 125, 293, 80, 303],
-            ["Angry Lich", 578, 128, 299, 90, 309],
-            ["Sand Elemental", 568, 124, 291, 100, 301],
+            ["Forest Spirit", 840, 144, 340, 10, 350],
+            ["Lich", 860, 148, 350, 20, 360],
+            ["Golem King", 880, 152, 360, 30, 370],
+            ["Sand Worm", 850, 146, 345, 40, 355],
+            ["Thunder Hawk", 870, 150, 355, 50, 365],
+            ["Forest Lich", 855, 147, 348, 60, 358],
+            ["Wild Gorilla", 865, 149, 352, 70, 362],
+            ["Cave Lich", 845, 145, 343, 80, 353],
+            ["Angry Lich", 858, 148, 349, 90, 359],
+            ["Sand Elemental", 848, 144, 341, 100, 351],
         ],
         # Level 13
         [
-            ["Hydra", 620, 136, 320, 10, 330],
+            ["Hydra", 920, 156, 370, 10, 380],
         ],
         # Level 21
         [
-            ["Shadow Dragon", 1100, 232, 620, 15, 630],
-            ["Archdemon", 1120, 236, 630, 35, 640],
-            ["Elder Titan", 1140, 240, 640, 55, 650],
-            ["Frost Phoenix", 1110, 234, 625, 75, 635],
-            ["Chaos Lord", 1130, 238, 635, 100, 645],
+            ["Shadow Dragon", 1700, 332, 820, 15, 830],
+            ["Archdemon", 1720, 336, 830, 35, 840],
+            ["Elder Titan", 1740, 340, 840, 55, 850],
+            ["Frost Phoenix", 1710, 334, 825, 75, 835],
+            ["Chaos Lord", 1730, 338, 835, 100, 845],
         ],
         # Level 22
         [
-            ["Frost Phoenix", 1160, 244, 660, 15, 670],
-            ["Chaos Lord", 1180, 248, 670, 35, 680],
-            ["Ancient Colossus", 1200, 252, 680, 55, 690],
-            ["Solar Serpent", 1170, 246, 665, 75, 675],
-            ["Void Titan", 1190, 250, 675, 100, 685],
+            ["Frost Phoenix", 1760, 344, 860, 15, 870],
+            ["Chaos Lord", 1780, 348, 870, 35, 880],
+            ["Ancient Colossus", 1800, 352, 880, 55, 890],
+            ["Solar Serpent", 1770, 346, 865, 75, 875],
+            ["Void Titan", 1790, 350, 875, 100, 885],
         ],
         # Level 23
         [
-            ["Solar Serpent", 1220, 256, 700, 15, 710],
-            ["Void Titan", 1240, 260, 710, 35, 720],
-            ["Elder Dragon", 1260, 264, 720, 55, 730],
-            ["Star Guardian", 1230, 258, 705, 75, 715],
-            ["Time Wraith", 1250, 262, 715, 100, 725],
+            ["Solar Serpent", 1820, 356, 900, 15, 910],
+            ["Void Titan", 1840, 360, 910, 35, 920],
+            ["Elder Dragon", 1860, 364, 920, 55, 930],
+            ["Star Guardian", 1830, 358, 905, 75, 915],
+            ["Time Wraith", 1850, 362, 915, 100, 925],
         ],
         # Level 24
         [
-            ["Star Guardian", 1280, 268, 740, 15, 750],
-            ["Time Wraith", 1300, 272, 750, 35, 760],
-            ["Cosmic Leviathan", 1320, 276, 760, 55, 770],
-            ["Celestial Hydra", 1290, 270, 745, 75, 755],
-            ["Ancient Phoenix", 1310, 274, 755, 100, 765],
+            ["Star Guardian", 1880, 368, 940, 15, 950],
+            ["Time Wraith", 1900, 372, 950, 35, 960],
+            ["Cosmic Leviathan", 1920, 376, 960, 55, 970],
+            ["Celestial Hydra", 1890, 370, 945, 75, 955],
+            ["Ancient Phoenix", 1910, 374, 955, 100, 965],
         ],
 
     ]
@@ -698,7 +720,7 @@ def random_encounter(game):
         typewriter("Invalid input! Defaulting to normal encounter.", style.RED)
         i = r.randint(0, 100)
 
-    if i <= 79 - 2*game['level']:
+    if i <= max(33, 79 - 2*game['level']):
         # Monster fight
         i = r.randint(0, 100)
         for monster in monsters[game['level'] - 1]:
@@ -719,30 +741,37 @@ def random_encounter(game):
                 while monster_hp > 0 and game["hp"] > 0:
                     qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
                     print()
-                    dmg = r.randint(player_weapon[1], player_weapon[2])
+                    dmg = r.randint(player_weapon[1] + 5*game['skill_set']['strength'], player_weapon[2] + 5*game['skill_set']['strength'])
                     mdmg = r.randint(int(monster_damage*0.7), monster_damage)
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
-                        if r.randint(0, 100) < 75 - 3*game['level']:
+                        if r.randint(0, 100) < 75 - 3*game['level']+5*game['skill_set']['agility']:
                             typewriter("You successfully ran away!", style.GREEN)
                             return game
                         else:
                             typewriter("You failed to escape!", style.RED)
                             if monster_hp > 0:
+                                if r.randint(0, 100) < 50 - 2*game['level'] + 5*game['skill_set']['agility']:
+                                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                                    game["hp"] -= mdmg
+                                    typewriter(his_attack, style.RED)
+                    elif qu == "attack":
+                        if r.randint(0, 100) < 75 - 3*game['level'] + 5*game['skill_set']['accuracy']:
+                            my_attack = f"You attack {monster_name} for {dmg} damage!"
+                            monster_hp -= dmg
+                            typewriter(my_attack, style.GREEN)
+                        else:
+                            typewriter("Your attack missed!", style.RED)
+                        if monster_hp > 0:
+                            if r.randint(0, 100) < 50 + 2*game['level'] - 5*game['skill_set']['agility']:
                                 his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
                                 typewriter(his_attack, style.RED)
-                    elif qu == "attack":
-                        my_attack = f"You attack {monster_name} for {dmg} damage!"
-                        monster_hp -= dmg
-                        typewriter(my_attack, style.GREEN)
-                        if monster_hp > 0:
-                            his_attack = f"{monster_name} strikes you for {mdmg} damage!"
-                            game["hp"] -= mdmg
-                            typewriter(his_attack, style.RED)
+                            else:
+                                typewriter("The monster's attack missed!", style.GREEN)
                     elif qu == "counter":
-                        if r.randint(0, 100) <= 75 - 3*game['level']:
+                        if r.randint(0, 100) <= 75 - 3*game['level'] + 5*game['skill_set']['accuracy']:
                             his_attack = f"{monster_name} tried to strike you, but failed!"
                             dmg = r.randint(max(dmg, mdmg)-min(dmg, mdmg), (max(dmg, mdmg)-min(dmg, mdmg))*2)
                             my_attack = f"You counter {monster_name}'s attack for {dmg}!"
@@ -752,9 +781,12 @@ def random_encounter(game):
                         else:
                             typewriter("Your counter failed!", style.RED)
                             if monster_hp > 0:
-                                his_attack = f"{monster_name} strikes you for {mdmg} damage!"
-                                game["hp"] -= mdmg
-                                typewriter(his_attack, style.RED)
+                                if r.randint(0, 100) < 75 - 3*game['level'] + 5*game['skill_set']['agility']:
+                                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                                    game["hp"] -= mdmg
+                                    typewriter(his_attack, style.RED)
+                                else:
+                                    typewriter("The monster's attack missed!", style.GREEN)
                     elif qu == "useItem":
                         
                         game = use_item(game)
@@ -789,7 +821,7 @@ def random_encounter(game):
                 time.sleep(3)
                 return game           
 
-    elif i <= 99 - 2*game['level']:
+    elif i <= max(67, 99 - 2*game['level']):
         # Treasure Chest Encounter
         typewriter("You found a mysterious treasure chest!", style.YELLOW)
         spinner(1, 0.1)
@@ -815,9 +847,9 @@ def random_encounter(game):
 
             # Weapons and their damage ranges
             weapon_stats = {
-                "Iron Sword": ["Iron Sword", 5, 10],
-                "Steel Axe": ["Steel Axe", 8, 16],
-                "Enchanted Dagger": ["Enchanted Dagger", 4, 14],
+                "Iron Sword": ["Iron Sword", 20, 50],
+                "Steel Axe": ["Steel Axe", 30, 55],
+                "Enchanted Dagger": ["Enchanted Dagger", 15, 70],
                 "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
             }
 
@@ -952,7 +984,16 @@ def shop(game):
         "Iron Sword": ["Iron Sword", 20, 50],
         "Steel Axe": ["Steel Axe", 30, 55],
         "Enchanted Dagger": ["Enchanted Dagger", 15, 70],
-        "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
+        "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220],
+        "Crystal Bow": ["Crystal Bow", 40, 80],
+        "Shadow Blade": ["Shadow Blade", 60, 120],
+        "Dragon Spear": ["Dragon Spear", 80, 160],
+        "Thunder Staff": ["Thunder Staff", 70, 140],
+        "Frost Hammer": ["Frost Hammer", 55, 110],
+        "Solar Rapier": ["Solar Rapier", 90, 180],
+        "Venom Whip": ["Venom Whip", 35, 100],
+        "Celestial Halberd": ["Celestial Halberd", 120, 240],
+        "Void Scythe": ["Void Scythe", 150, 300],
     }
 
     item_costs = {
@@ -963,11 +1004,20 @@ def shop(game):
         "Iron Sword": 100,
         "Steel Axe": 200,
         "Enchanted Dagger": 150,
+        "(Totally) Mjölnir": 500,
         "Phoenix Feather": 300,
         "Elixir of Fortitude": 200,
         "Mystic Cloak": 600,
-        "(Totally) Mjölnir": 500,
         "Shadow Amulet": 350,
+        "Crystal Bow": 250,
+        "Shadow Blade": 400,
+        "Dragon Spear": 600,
+        "Thunder Staff": 500,
+        "Frost Hammer": 350,
+        "Solar Rapier": 700,
+        "Venom Whip": 300,
+        "Celestial Halberd": 900,
+        "Void Scythe": 1200,
     }
 
     typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:', style.BOLD)
@@ -1020,15 +1070,32 @@ def shop(game):
 
 def level_up_check(game):
 
-    while game["xp"] >= 450 * game["level"]:
+    while game["xp"] >= 200 * game["level"]:
+        game["xp"] -= 200 * game["level"]
         game["level"] += 1
-        game["xp"] -= 450 * game["level"]
         game["max_hp"] += round(game["max_hp"] * 0.2)
         game["hp"] = game["max_hp"]
         print()
         typewriter(f"Congratulations! You leveled up to level {game['level']}!", style.GREEN)
+        typewriter(f"Your experience is {game['xp']}!", style.GREEN)
         typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
         typewriter(f"You have also regened to max hp", style.GREEN)
+        
+        print()
+        for skill, level in game['skill_set'].items():
+            print(f"{style.YELLOW}{skill.capitalize()}: {level}{style.RESET}")
+            time.sleep(0.1)
+
+        while True:
+            
+            choice = input(f"\n{style.CYAN}Choose a skill to improve (or 'exit' to leave) >>> {style.RESET}").strip()
+
+            if choice in game["skill_set"]:
+                game["skill_set"][choice] += 1
+                typewriter(f"You have improved your {choice} skill!", style.GREEN)
+                break
+            else:
+                typewriter(f" > Invalid skill choice, Make sure you type it perfectly", style.RED)
 
         time.sleep(1)
 
