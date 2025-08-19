@@ -36,6 +36,7 @@ bsvc = 0
 nsvc = 0
 mi = False
 x = False
+y = False
 
 # Initialize a new game state dictionary
 def init_new_game():
@@ -168,7 +169,7 @@ def check_game_over(game):
     if game["hp"] <= 0:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
         return True
-    elif game["level"] == 11:
+    elif game["level"] == 25:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
         game["artifacts"].append("Drago's Egg")
         return True
@@ -279,7 +280,8 @@ def use_item(game):
                 time.sleep(0.5)
                 typewriter("It reveals a hidden path...", style.GREEN)
                 time.sleep(0.5)
-                
+            else:
+                typewriter("You don't seem to know how to use this...", style.RED)
 
         # Default: item cannot be used in battle
         else:
@@ -291,7 +293,7 @@ def use_item(game):
         return game
 
 def LaDoodle_dialouge(game):
-    global nsvc, x, bsvc
+    global nsvc, x, bsvc, y
     if bsvc == 0:
         typewriter("...", style.YELLOW)
         time.sleep(1)
@@ -428,6 +430,52 @@ def LaDoodle_dialouge(game):
         time.sleep(0.5)
         typewriter("Let's get shopping!", style.GREEN)
 
+    if bsvc >= 2 :
+        if nsvc > 0 and not y:
+            typewriter("You saw Noah? That's incredible!", style.GREEN)
+            time.sleep(0.5)
+            typewriter("He's been missing for ages... I was starting to worry.", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("Did he seem alright? What was he up to?", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("If you hear anything interesting, let me know. He's a good friend.", style.GREEN)
+            time.sleep(0.5)
+            typewriter("I see you have my hat", style.GREEN)
+            time.sleep(0.5) 
+            typewriter("Can you give it back to me pls?", style.GREEN)
+            if input(" (y/n) > ").strip().lower() == 'y':
+                typewriter("Thx man.", style.GREEN)
+                game['artifacts'].remove("LaDoodle's Hat")
+                time.sleep(0.1)
+                print(f" {style.BOLD}- LaDoodle's Hat {style.RESET} ")
+                time.sleep(0.1)
+                print(f" {style.BOLD}+ 500 Gold {style.RESET} ")
+                game['gold'] += 500
+                time.sleep(0.1)
+                typewriter("I gave you a little something extra for your trouble.", style.GREEN)
+            else: 
+                typewriter("I promise I'll give you something good next time.", style.YELLOW)
+            y = True
+        elif y and nsvc > 0:
+            typewriter("Yo, can I pls have my hat back pretty pls, I'll give you a super special reward!", style.YELLOW)
+            if input(" (y/n) > ").strip().lower() == 'y':
+                typewriter("Thx man.", style.GREEN)
+                game['artifacts'].remove("LaDoodle's Hat")
+                time.sleep(0.1)
+                print(f" {style.BOLD}- LaDoodle's Hat {style.RESET} ")
+                time.sleep(0.1)
+                print(f" {style.BOLD}+ 500 Gold {style.RESET} ")
+                game['gold'] += 500
+                time.sleep(0.1)
+                typewriter("I gave you a little something extra for your trouble.", style.GREEN)
+            else:
+                typewriter(":(", style.YELLOW)
+            y = True
+
+        typewriter("Same stuff as before my adventurer friend!", style.GREEN)
+        time.sleep(0.5)
+        typewriter("Check them out!", style.GREEN)
+
     return game
 
 
@@ -437,29 +485,214 @@ def random_encounter(game):
     spinner(1, 0.1)
 
     # Monster format: [name, hp, damage, reward, chance, xp drop]
+    # The chance value is cumulative; the first monster is picked if i <= chance, next if i <= chance, etc.
+    # Each level has progressively harder monsters, higher rewards and xp drops.
+    # Player starts with 100 HP, weapon damage 10-20, and no armor.
+    # Let's balance early monsters to be a real threat but not overwhelming.
+    # Increase monster HP and damage, and XP/reward for challenge.
+    # Adjusted for better balance: monsters scale more smoothly, rewards and XP are more consistent.
     monsters = [
-        ["VENOM DRAKE", 110, 35, 20, 180, 50],
-        ["NIGHT STALKER", 130, 45, 30, 340, 70],
-        ["CRYPT LICH", 170, 60, 50, 520, 100],
-        ["STONE GOLEM", 220, 80, 90, 700, 130],
-        ["VOID SHADE", 260, 100, 120, 850, 150],
-        ["GORM", 320, 200, 250, 950, 250],
-        ["BLADE PHANTOM", 400, 250, 500, 1000, 500],
+        # Level 1 (Player: HP 100, Weapon 10-20)
+        [
+            ["Slime", 60, 18, 30, 10, 35],
+            ["Rat", 65, 20, 32, 20, 38],
+            ["Goblin", 70, 22, 36, 30, 40],
+            ["Bat", 58, 17, 28, 40, 32],
+            ["Wild Mouse", 62, 19, 30, 50, 33],
+            ["Tiny Spider", 55, 16, 27, 60, 30],
+            ["Lost Chick", 53, 15, 25, 70, 28],
+            ["Baby Snake", 57, 18, 29, 80, 31],
+            ["Mischievous Pixie", 60, 19, 31, 90, 34],
+            ["Angry Squirrel", 56, 17, 27, 100, 30],
+            ["Bandit Initiate", 68, 21, 38, 110, 42],
+            ["Forest Beetle", 59, 18, 29, 120, 32],
+        ],
+        # Level 2 (Player: HP ~120, Weapon 10-20 or better)
+        [
+            ["Wolf", 85, 24, 40, 10, 45],
+            ["Bandit", 90, 26, 44, 20, 48],
+            ["Goblin Brute", 95, 28, 48, 30, 52],
+            ["Snake", 80, 22, 36, 40, 40],
+            ["Wild Dog", 88, 23, 38, 50, 42],
+            ["Forest Spider", 86, 21, 34, 60, 39],
+            ["Bandit Scout", 92, 25, 42, 70, 47],
+            ["Angry Crow", 78, 20, 32, 80, 36],
+            ["Wild Cat", 85, 23, 38, 90, 44],
+            ["Mischievous Goblin", 83, 22, 35, 100, 41],
+            ["Bandit Slinger", 97, 27, 50, 110, 54],
+            ["Forest Snake", 87, 24, 39, 120, 43],
+        ],
+        # Level 3
+        [
+            ["Skeleton", 65, 20, 40, 10, 50],
+            ["Wild Boar", 80, 22, 45, 20, 55],
+            ["Orc", 100, 25, 50, 30, 60],
+            ["Zombie Dog", 70, 18, 35, 40, 45],
+            ["Bandit Archer", 85, 21, 38, 50, 48],
+            ["Ghoul", 75, 19, 36, 60, 47],
+            ["Forest Wolf", 78, 20, 39, 70, 52],
+            ["Wild Ram", 82, 21, 41, 80, 54],
+            ["Cave Bat", 68, 17, 33, 90, 43],
+            ["Angry Boar", 72, 18, 37, 100, 46],
+        ],
+        # Level 4
+        [
+            ["Zombie", 110, 28, 55, 10, 65],
+            ["Bandit Leader", 130, 32, 60, 20, 70],
+            ["Orc Warrior", 150, 36, 70, 30, 80],
+            ["Ghoul", 120, 30, 50, 40, 60],
+            ["Wild Bear", 140, 34, 65, 50, 75],
+            ["Forest Troll", 125, 31, 58, 60, 68],
+            ["Bandit Swordsman", 135, 33, 62, 70, 72],
+            ["Cave Spider", 115, 29, 53, 80, 63],
+            ["Angry Bear", 128, 32, 59, 90, 69],
+            ["Wild Lynx", 118, 28, 54, 100, 64],
+        ],
+        # Level 5
+        [
+            ["Giant Spider", 160, 40, 80, 10, 90],
+            ["Ghoul", 180, 44, 90, 20, 100],
+            ["Troll", 200, 48, 100, 30, 110],
+            ["Swamp Lizard", 170, 42, 85, 40, 95],
+            ["Bandit Mage", 190, 46, 95, 50, 105],
+            ["Forest Ogre", 175, 43, 88, 60, 98],
+            ["Wild Crocodile", 185, 45, 92, 70, 102],
+            ["Cave Troll", 165, 41, 83, 80, 93],
+            ["Angry Troll", 178, 44, 89, 90, 99],
+            ["Swamp Rat", 168, 40, 81, 100, 91],
+        ],
+        # Level 6
+        [
+            ["Dire Wolf", 210, 52, 110, 10, 120],
+            ["Dark Mage", 230, 56, 120, 20, 130],
+            ["Ogre", 250, 60, 130, 30, 140],
+            ["Vampire", 220, 54, 115, 40, 125],
+            ["Forest Troll", 240, 58, 125, 50, 135],
+            ["Bandit Captain", 225, 55, 118, 60, 128],
+            ["Cave Ogre", 235, 57, 122, 70, 132],
+            ["Wild Panther", 215, 53, 113, 80, 123],
+            ["Angry Ogre", 228, 56, 119, 90, 129],
+            ["Dark Sorcerer", 218, 52, 111, 100, 121],
+        ],
+        # Level 7
+        [
+            ["Vampire Bat", 260, 64, 140, 10, 150],
+            ["Wraith", 280, 68, 150, 20, 160],
+            ["Minotaur", 300, 72, 160, 30, 170],
+            ["Specter", 270, 66, 145, 40, 155],
+            ["Cave Ogre", 290, 70, 155, 50, 165],
+            ["Bandit Berserker", 275, 67, 148, 60, 158],
+            ["Wild Tiger", 285, 69, 152, 70, 162],
+            ["Angry Minotaur", 265, 65, 143, 80, 153],
+            ["Dark Wraith", 278, 68, 149, 90, 159],
+            ["Spectral Bat", 268, 64, 141, 100, 151],
+        ],
+        # Level 8
+        [
+            ["Fire Elemental", 320, 76, 170, 10, 180],
+            ["Ice Golem", 340, 80, 180, 20, 190],
+            ["Werewolf", 360, 84, 190, 30, 200],
+            ["Frost Bat", 330, 78, 175, 40, 185],
+            ["Bandit Captain", 350, 82, 185, 50, 195],
+            ["Forest Werewolf", 335, 79, 178, 60, 188],
+            ["Wild Rhino", 345, 81, 182, 70, 192],
+            ["Cave Golem", 325, 77, 173, 80, 183],
+            ["Angry Golem", 338, 80, 179, 90, 189],
+            ["Ice Elemental", 328, 76, 171, 100, 181],
+        ],
+        # Level 9
+        [
+            ["Stone Guardian", 380, 88, 200, 10, 210],
+            ["Necromancer", 400, 92, 210, 20, 220],
+            ["Cyclops", 420, 96, 220, 30, 230],
+            ["Shadow Beast", 390, 90, 205, 40, 215],
+            ["Forest Spirit", 410, 94, 215, 50, 225],
+            ["Bandit Sorcerer", 395, 91, 208, 60, 218],
+            ["Wild Elephant", 405, 93, 212, 70, 222],
+            ["Cave Cyclops", 385, 89, 203, 80, 213],
+            ["Angry Cyclops", 398, 92, 209, 90, 219],
+            ["Shadow Elemental", 388, 88, 201, 100, 211],
+        ],
+        # Level 10
+        [
+            ["Thunder Lizard", 440, 100, 230, 10, 240],
+            ["Shadow Assassin", 460, 104, 240, 20, 250],
+            ["Giant", 480, 108, 250, 30, 260],
+            ["Storm Hawk", 450, 102, 235, 40, 245],
+            ["Bandit King", 470, 106, 245, 50, 255],
+            ["Forest Giant", 455, 103, 238, 60, 248],
+            ["Wild Buffalo", 465, 105, 242, 70, 252],
+            ["Cave Giant", 445, 101, 233, 80, 243],
+            ["Angry Giant", 458, 104, 239, 90, 249],
+            ["Thunder Elemental", 448, 100, 231, 100, 241],
+        ],
+        # Level 11
+        [
+            ["Hellhound", 500, 112, 260, 10, 270],
+            ["Specter", 520, 116, 270, 20, 280],
+            ["Demon", 540, 120, 280, 30, 290],
+            ["Dark Knight", 510, 114, 265, 40, 275],
+            ["Ancient Zombie", 530, 118, 275, 50, 285],
+            ["Forest Demon", 515, 115, 268, 60, 278],
+            ["Wild Mammoth", 525, 117, 272, 70, 282],
+            ["Cave Demon", 505, 113, 263, 80, 273],
+            ["Angry Demon", 518, 116, 269, 90, 279],
+            ["Spectral Knight", 508, 112, 261, 100, 271],
+        ],
+        # Level 12
+        [
+            ["Forest Spirit", 560, 124, 290, 10, 300],
+            ["Lich", 580, 128, 300, 20, 310],
+            ["Golem King", 600, 132, 310, 30, 320],
+            ["Sand Worm", 570, 126, 295, 40, 305],
+            ["Thunder Hawk", 590, 130, 305, 50, 315],
+            ["Forest Lich", 575, 127, 298, 60, 308],
+            ["Wild Gorilla", 585, 129, 302, 70, 312],
+            ["Cave Lich", 565, 125, 293, 80, 303],
+            ["Angry Lich", 578, 128, 299, 90, 309],
+            ["Sand Elemental", 568, 124, 291, 100, 301],
+        ],
+        # Level 13
+        [
+            ["Hydra", 620, 136, 320, 10, 330],
+        ],
+        # Level 21
+        [
+            ["Shadow Dragon", 1100, 232, 620, 15, 630],
+            ["Archdemon", 1120, 236, 630, 35, 640],
+            ["Elder Titan", 1140, 240, 640, 55, 650],
+            ["Frost Phoenix", 1110, 234, 625, 75, 635],
+            ["Chaos Lord", 1130, 238, 635, 100, 645],
+        ],
+        # Level 22
+        [
+            ["Frost Phoenix", 1160, 244, 660, 15, 670],
+            ["Chaos Lord", 1180, 248, 670, 35, 680],
+            ["Ancient Colossus", 1200, 252, 680, 55, 690],
+            ["Solar Serpent", 1170, 246, 665, 75, 675],
+            ["Void Titan", 1190, 250, 675, 100, 685],
+        ],
+        # Level 23
+        [
+            ["Solar Serpent", 1220, 256, 700, 15, 710],
+            ["Void Titan", 1240, 260, 710, 35, 720],
+            ["Elder Dragon", 1260, 264, 720, 55, 730],
+            ["Star Guardian", 1230, 258, 705, 75, 715],
+            ["Time Wraith", 1250, 262, 715, 100, 725],
+        ],
+        # Level 24
+        [
+            ["Star Guardian", 1280, 268, 740, 15, 750],
+            ["Time Wraith", 1300, 272, 750, 35, 760],
+            ["Cosmic Leviathan", 1320, 276, 760, 55, 770],
+            ["Celestial Hydra", 1290, 270, 745, 75, 755],
+            ["Ancient Phoenix", 1310, 274, 755, 100, 765],
+        ],
+
     ]
 
     # Adjust monster chances based on level
-    level = game["level"]
     
-    bias = min(max(level - 1, 0), 9)  # 0 to 9
-    half = len(monsters)//2
-    bias_shift = bias*2
-    new_monsters = []
-    
-    for i, (name, hp, damage, reward, chance, xp) in enumerate(monsters):
-        shift = bias_shift if i >= half else - bias_shift
-        new_chance = max(0,min(1000, chance + shift))  
-        new_monsters.append([name, hp, damage, reward, new_chance, xp])
-    monsters = new_monsters
     try:
         i = r.randint(0, 100) if not game['cheat_mode'] else int(input("Monster : (0-79), Treasure : (80-99), Shopkeeper : (100) >>> "))
     except Exception as e:
@@ -468,8 +701,8 @@ def random_encounter(game):
 
     if i <= 79 - 2*game['level']:
         # Monster fight
-        i = r.randint(0, 1000)
-        for monster in monsters:
+        i = r.randint(0, 100)
+        for monster in monsters[game['level'] - 1]:
             if i <= monster[4]:
                 typewriter(f"{monster[0]} appeared!", style.RED)
                 player_weapon = game["weapons"][game["equipped"]]
@@ -571,7 +804,6 @@ def random_encounter(game):
                 "Small Health Potion",
                 "Large Health Potion",
                 "Magic Scroll",
-                "Secret Map",
                 "Iron Sword",
                 "Steel Axe",
                 "Enchanted Dagger",
@@ -627,15 +859,17 @@ def random_encounter(game):
         
         while True:
             item_costs = {
-                "Pen": 500,
-                "Infinity Heal": 200,
-                "Infinity Buff" : 200,
+                "Pen": 2000,
+                "Infinity Heal": 300,
+                "Infinity Buff" : 300,
                 "Level Up": 300*game["level"]
             }
             for idx, (item, cost) in enumerate(item_costs.items(), start=1):
                 print(f'{idx}. {item}: {cost} gold')
                 time.sleep(0.1)
-            i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
+
+            typewriter(f"\nGold : {game['gold']}", style.YELLOW)
+            i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit to leave) >>> ").strip()
 
             if i == "exit":
                 break
@@ -647,7 +881,7 @@ def random_encounter(game):
                 else:
                     typewriter(f"\nHow can you not afford this?", style.RED)
                     time.sleep(0.5)
-                    typewriter("It literally says 'Cheaper' in the name", style.RED)
+                    typewriter("It literally says 'Level Up' in the name", style.RED)
                     time.sleep(0.5)
                     typewriter("Please pay attention of ur gold next time.", style.RED)
             elif i == "Pen":
@@ -725,7 +959,7 @@ def shop(game):
     item_costs = {
         "Small Health Potion": 30,
         "Large Health Potion": 90,
-        "Magic Scroll": 350,
+        "Magic Scroll": 400,
         "Secret Map": 1000,
         "Iron Sword": 100,
         "Steel Axe": 200,
@@ -750,7 +984,7 @@ def shop(game):
         for item, (name, min_dmg, max_dmg) in weapon_stats.items():
             print(f"{style.YELLOW} {name}: {min_dmg}-{max_dmg} dmg {style.RESET}")
 
-        print(f"{style.YELLOW} Current Gold: {game['gold']} {style.RESET}")
+        print(f"\n{style.YELLOW}Current Gold: {game['gold']} {style.RESET}")
         try:
             choice = str(input(f"{style.CYAN}Enter the item you wish to buy (or 'exit' to leave) >>> {style.RESET}")).strip()
         except Exception as e:
@@ -786,15 +1020,18 @@ def shop(game):
     return game
 
 def level_up_check(game):
-    if game["xp"] >= 450 * game["level"]:
-        game["level"] += 1
-        game["xp"] = 0
-        game["max_hp"] += math.round(game["max_hp"] * 0.2)
-        game["hp"] = game["max_hp"]
-        typewriter(f"Congratulations! You leveled up to : {game['level']}!", style.GREEN)
-        typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
 
-        time.sleep(3)
+    while game["xp"] >= 450 * game["level"]:
+        game["level"] += 1
+        game["xp"] -= 450 * game["level"]
+        game["max_hp"] += round(game["max_hp"] * 0.2)
+        game["hp"] = game["max_hp"]
+        print()
+        typewriter(f"Congratulations! You leveled up to level {game['level']}!", style.GREEN)
+        typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
+        typewriter(f"You have also regened to max hp", style.GREEN)
+
+        time.sleep(1)
 
     return game
 
@@ -833,7 +1070,14 @@ def main():
                 game["hp"] = 0
             elif s in ["win"] and game["cheat_mode"]:
                 print(f"\n {style.GREEN}> Win{style.RESET}")
-                game["level"] = 11
+                game["level"] = 25
+            elif s in ["addxp"] and game["cheat_mode"]:
+                amount = input(f"{style.CYAN}Enter XP amount to add: {style.RESET}")
+                if amount.isdigit():
+                    game["xp"] += int(amount)
+                    typewriter(f"Added {amount} XP!", style.GREEN)
+                else:
+                    typewriter(f"Invalid input. Please enter a number.", style.RED)
             elif s in ["save"]:
                 json_save(game)
             elif s in ["load"]:
@@ -858,6 +1102,7 @@ def main():
                     return main()
                 else:
                     return
+                
             game = level_up_check(game)
 
             input("Press Enter to continue > ")
