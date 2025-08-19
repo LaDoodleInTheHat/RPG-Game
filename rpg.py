@@ -290,8 +290,8 @@ def use_item(game):
         typewriter("You have no items to use!", style.RED)
         return game
 
-def LaDoodle_dialouge(game, bsvc):
-    global nsvc, x
+def LaDoodle_dialouge(game):
+    global nsvc, x, bsvc
     if bsvc == 0:
         typewriter("...", style.YELLOW)
         time.sleep(1)
@@ -563,7 +563,7 @@ def random_encounter(game):
         spinner(1, 0.1)
         reward_type = r.choices(["gold", "item"], weights=[70, 30])[0]
         if reward_type == "gold":
-            gold_found = r.randint(30, 120) + game["level"] * 5
+            gold_found = r.randint(30, 120) + game["level"] * 20
             typewriter(f"You open the chest and find {gold_found} gold!", style.GREEN)
             game["gold"] += gold_found
         else:
@@ -621,7 +621,7 @@ def random_encounter(game):
     elif i <= 100:
         # Shopkeeper encounter
 
-        game = LaDoodle_dialouge(game, bsvc)
+        game = LaDoodle_dialouge(game)
 
         pen = ["Pen", 999999999999999999999999999999999, 999999999999999999999999999999999999999999999999999999999999999999]
         
@@ -639,8 +639,8 @@ def random_encounter(game):
 
             if i == "exit":
                 break
-            elif i == "Level Up (Cheaper)":
-                if game['gold']>= item_costs["Level Up (Cheaper)"]:
+            elif i == "Level Up":
+                if game['gold']>= item_costs["Level Up"]:
                     game["gold"] -= item_costs[i]
                     game["level"] += 1
                     typewriter(f"\nYou have leveled up to level {game['level']}!", style.GREEN)
@@ -660,7 +660,7 @@ def random_encounter(game):
                 else:
                     typewriter(f"\nPoor.", style.RED)
             elif i in item_costs:
-                if game['gold']>= item_costs["Level Up (Cheaper)"]:
+                if game['gold']>= item_costs[i]:
                     game["gold"] -= item_costs[i]
                     game["inventory"].append(i)
                     typewriter("\nPlease take care of this, it was quite expensive...", style.GREEN)
@@ -864,9 +864,9 @@ def main():
         except KeyboardInterrupt:
             print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
             input("Press Enter to continue > ")
-        except Exception as e:
-            print(f"{style.RED}\n > An error occurred: {e}{style.RESET}")
-            input("Press Enter to continue > ")
+        # except Exception as e:
+        #     print(f"{style.RED}\n > An error occurred: {e}{style.RESET}")
+        #     input("Press Enter to continue > ")
 
 # Start the game
 if __name__ == "__main__":
