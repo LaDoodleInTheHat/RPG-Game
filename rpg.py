@@ -5,7 +5,7 @@ Move onto additions.
 
 """
 
-import time, random as r, os, json
+import time, random as r, os, json, math
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -33,6 +33,9 @@ def spinner(duration, delay):
     print(style.CLEAR_LINE) 
 
 bsvc = 0
+nsvc = 0
+mi = False
+x = False
 
 # Initialize a new game state dictionary
 def init_new_game():
@@ -271,10 +274,12 @@ def use_item(game):
             typewriter("You used an Infinity Buff and increased all your weapon's damage!", style.GREEN)
 
         elif item == "Secret Map":
-            typewriter("Unfortunately the Secret map has no current use at this stage of development", style.YELLOW)
-            typewriter("But stay tuned for more!", style.GREEN)
-
-            time.sleep(1)
+            if mi:
+                typewriter("You used the Secret Map!", style.GREEN)
+                time.sleep(0.5)
+                typewriter("It reveals a hidden path...", style.GREEN)
+                time.sleep(0.5)
+                
 
         # Default: item cannot be used in battle
         else:
@@ -284,6 +289,147 @@ def use_item(game):
     else:
         typewriter("You have no items to use!", style.RED)
         return game
+
+def LaDoodle_dialouge(game, bsvc):
+    global nsvc, x
+    if bsvc == 0:
+        typewriter("...", style.YELLOW)
+        time.sleep(1)
+        typewriter("I see you're a traveler. What brings you here?", style.YELLOW)
+        time.sleep(0.5)
+        typewriter("Oh, I forgot, ur playing the game",style.GREEN)
+        time.sleep(0.5)
+        typewriter("Weeeelll.", style.GREEN)
+        time.sleep(0.25)
+        typewriter("I'm Krivi's avatar, LaDoodleInTheHat.", style.GREEN)
+        time.sleep(0.5)
+        typewriter("Well without the hat rlly, cause I lost it.", style.YELLOW)
+        time.sleep(0.5)
+        typewriter("Have you seen Noah?", style.YELLOW)
+        if input(" (y/n) > ").strip().lower() == "y":
+            if nsvc > 0:
+                typewriter("Oh you have!", style.GREEN)
+                time.sleep(0.5)
+                typewriter("That's great to hear!", style.GREEN)
+                time.sleep(0.5)
+                typewriter("Then you must have my hat!", style.GREEN)
+                if input(" (y/n) > ").strip().lower() == "y":
+                    if "LaDoodle's Hat" in game['artifacts']:
+                        typewriter("NIIIICCCEEEE", style.GREEN)
+                        time.sleep(0.5)
+                        typewriter("Can you give it back to me pls?", style.GREEN)
+                        if input(" (y/n) > ").strip().lower() == 'y':
+                            
+                            typewriter("Thx man.", style.GREEN)
+                            game['artifacts'].remove("LaDoodle's Hat")
+                            time.sleep(0.1)
+                            print(f" {style.BOLD}- LaDoodle's Hat {style.RESET} ")
+                            time.sleep(0.1)
+                            print(f" {style.BOLD}+ 500 Gold {style.RESET} ")
+                            game['gold'] += 500
+                            time.sleep(0.1)
+                            typewriter("I gave you a little something extra for your trouble.", style.GREEN)
+                    else:
+                        typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
+            else:
+                typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
+
+                time.sleep(0.5)
+                typewriter("He's been missing for a while now...", style.YELLOW)
+                time.sleep(0.5)
+                typewriter("And I think he has my hat...", style.YELLOW)
+                time.sleep(0.5)
+                if not ('Secret Map' in game['inventory']):
+                    typewriter("I have this map that might help you find him.", style.YELLOW)
+                    time.sleep(0.1)
+                    print(f" {style.BOLD}+ Secret Map {style.RESET} ")
+                    time.sleep(0.1)
+                    game["inventory"].append("Secret Map")
+                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
+                    time.sleep(0.5)
+                    typewriter("It would be nice if you can get my hat back.", style.GREEN)
+                elif 'Secret Map' in game['inventory']:
+                    typewriter("I see you already have the map.", style.YELLOW)
+                    time.sleep(0.5)
+                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
+                    time.sleep(0.5)
+                    typewriter("It would be nice if you can get my hat back.", style.GREEN)
+
+                x = True
+
+        else:
+            time.sleep(0.5)
+            typewriter("He's been missing for a while now...", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("And I think he has my hat...", style.YELLOW)
+            time.sleep(0.5)
+            if not ('Secret Map' in game['inventory']):
+                typewriter("I have this map that might help you find him.", style.YELLOW)
+                time.sleep(0.1)
+                print(f" {style.BOLD}+ Secret Map {style.RESET} ")
+                time.sleep(0.1)
+                game["inventory"].append("Secret Map")
+                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
+                time.sleep(0.5)
+                typewriter("It would be nice if you can get my hat back.", style.GREEN)
+            elif 'Secret Map' in game['inventory']:
+                typewriter("I see you already have the map.", style.YELLOW)
+                time.sleep(0.5)
+                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
+                time.sleep(0.5)
+                typewriter("It would be nice if you can get my hat back.", style.GREEN)
+
+            x = True
+
+        time.sleep(0.5)
+        typewriter("Anyway, you can buy stuff from here", style.GREEN)
+        time.sleep(0.5)
+        typewriter("Pretty op stuff :)", style.GREEN)
+        time.sleep(0.5)
+        typewriter("Let's get shopping!", style.GREEN)
+
+        mi = True
+
+    elif bsvc == 1:
+        typewriter("Welcome back my friend!", style.GREEN)
+        time.sleep(0.5)
+        if x:
+            typewriter("Have you seen Noah?", style.YELLOW)
+            time.sleep(0.5)
+            typewriter("Yet?", style.YELLOW)
+            if input(" (y/n) > ").strip().lower() == "y":
+                if nsvc > 0:
+                    typewriter("Oh finally!", style.GREEN)
+                    time.sleep(0.5)
+                    typewriter("That's great to hear!", style.GREEN)
+                    time.sleep(0.5)
+                    typewriter("Then you must have my hat!", style.GREEN)
+                    if input(" (y/n) > ").strip().lower() == "y":
+                        if "LaDoodle's Hat" in game['artifacts']:
+                            typewriter("NIIIICCCEEEE", style.GREEN)
+                            time.sleep(0.5)
+                            typewriter("Can you give it back to me pls?", style.GREEN)
+                            if input(" (y/n) > ").strip().lower() == 'y':
+                                
+                                typewriter("Thx man.", style.GREEN)
+                                game['artifacts'].remove("LaDoodle's Hat")
+                                time.sleep(0.1)
+                                print(f" {style.BOLD}- LaDoodle's Hat {style.RESET} ")
+                                time.sleep(0.1)
+                                print(f" {style.BOLD}+ 500 Gold {style.RESET} ")
+                                game['gold'] += 500
+                                time.sleep(0.1)
+                                typewriter("I gave you a little something extra for your trouble.", style.GREEN)
+                        else:
+                            typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
+                else:
+                    typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
+        typewriter("You know the drill.")
+        time.sleep(0.5)
+        typewriter("Let's get shopping!", style.GREEN)
+
+    return game
+
 
 # Handle random encounters (monster, treasure, shopkeeper)
 def random_encounter(game):
@@ -320,7 +466,7 @@ def random_encounter(game):
         typewriter("Invalid input! Defaulting to normal encounter.", style.RED)
         i = r.randint(0, 100)
 
-    if i <= 79:
+    if i <= 79 - 2*game['level']:
         # Monster fight
         i = r.randint(0, 1000)
         for monster in monsters:
@@ -411,7 +557,7 @@ def random_encounter(game):
                 time.sleep(3)
                 return game           
 
-    elif i <= 99:
+    elif i <= 99 - 2*game['level']:
         # Treasure Chest Encounter
         typewriter("You found a mysterious treasure chest!", style.YELLOW)
         spinner(1, 0.1)
@@ -474,87 +620,8 @@ def random_encounter(game):
     
     elif i <= 100:
         # Shopkeeper encounter
-        if bsvc == 0:
-            typewriter("Hmmmmmm...", style.YELLOW)
-            time.sleep(5)
-            typewriter("An adventurer...", style.YELLOW)
-            time.sleep(2)
-            typewriter("\nWelcome to the secret shop...", style.GREEN)
-            time.sleep(0.5)
-            typewriter("You can get special items and for cheaper...", style.GREEN)
-            time.sleep(0.5)
-            if "LaDoodle's Hat" in game['artifacts']:
-                time.sleep(2)
-                typewriter("I see you have my hat, wonder how that got there....", style.YELLOW)
-                time.sleep(0.5)
 
-            if game['cheat_mode']:
-                typewriter("Ah, I see you're in cheat mode. you are a disgrace to gaming. :(", style.RED)
-                time.sleep(0.5)
-                typewriter("Meh, doesn't rlly matter that much anyway", style.YELLOW)
-                time.sleep(0.5)
-            typewriter("\nAlso btw I'm LaDoodleInTheHat, the creator of the game, so I'm technically a god, that's why I'm here", style.GREEN)
-        elif bsvc == 1:
-            typewriter("Bro, how did I even flippin get here?", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("Did I just... teleport?", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("This is some crazy stuff, man.", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("I need to get out of here.", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("Oh.", style.YELLOW)
-            time.sleep(2)
-            typewriter("It's you", style.YELLOW)
-            time.sleep(0.5)
-            if game['cheat_mode']:
-                typewriter("Still wonder how much cheating you do...", style.RED)
-                time.sleep(0.5)
-
-            if "LaDoodle's Hat" in game['artifacts']:
-                time.sleep(2)
-                typewriter("AAAnd you still have my hat, can I have that back pls?", style.YELLOW)
-                x = True if input(" (y/n) >>> ").strip().lower() == "y" else False
-
-                if x:
-                    game['artifacts'].remove("LaDoodle's Hat")
-                    typewriter("Thank you! I rlly appreciate it.", style.GREEN)
-                    game["gold"] += 100
-                    print(f"{style.BOLD}{style.YELLOW} +100 gold{style.RESET}")
-                    typewriter("Also I gave you some gold for giving it back :)", style.GREEN)
-                else:
-                    typewriter("That's too bad. I really want it back.", style.YELLOW)
-                time.sleep(0.5)
-            
-            typewriter("Now that I'm here, why don't you just buy something.", style.GREEN)
-
-        elif bsvc == 2:
-            typewriter("...", style.RED)
-            time.sleep(3)
-            typewriter("WHAT THE HELL MAN", style.RED)
-            time.sleep(0.5)
-            typewriter("WHY DO I KEEP ON TELEPORTING TO WHEREVER THE HELL YOU ARE?", style.RED)
-            time.sleep(0.5)
-            typewriter("I THOUGHT I CODED IT TO BE A 1% CHANCE OF SUMMONING ME", style.RED)
-            time.sleep(0.5)
-            if game['cheat_mode']:
-                typewriter("This is why...", style.RED)
-                time.sleep(0.5)
-                typewriter("Cheating is bad, mkay?", style.YELLOW)
-                time.sleep(0.5)
-                typewriter("Pls tell kriv how you managed to make that special cheat file", style.YELLOW)
-                time.sleep(0.5)
-
-                typewriter("This is why you don't cheat, kids.", style.YELLOW)
-                time.sleep(0.5)
-
-            typewriter("Just hurry with your shopping man, It's just the same stuff as before ", style.GREEN)
-
-        elif bsvc >= 3:
-            typewriter(":)", style.BLUE)
-            time.sleep(0.5)
-            typewriter("I'm glad to see you again!", style.GREEN)
-            time.sleep(0.5)
+        game = LaDoodle_dialouge(game, bsvc)
 
         pen = ["Pen", 999999999999999999999999999999999, 999999999999999999999999999999999999999999999999999999999999999999]
         
@@ -571,28 +638,6 @@ def random_encounter(game):
             i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit for exit) >>> ").strip()
 
             if i == "exit":
-                if bsvc == 0:
-                    typewriter("Thank you for visiting my shop (Tell kriv that you came here)  :)", style.GREEN)
-                elif bsvc == 1:
-                    typewriter("I hope you found what you were looking for...", style.YELLOW)
-                elif bsvc == 2:
-                    typewriter("Just leave and don't come back, cause like im getting kinda annoyed...", style.RED)
-                    time.sleep(5)
-                    typewriter("Seriously, just go away.", style.RED)
-                    time.sleep(1)
-                    typewriter("I'm sorry for shouting at you, will you forgive me?", style.GREEN)
-                    x = True if input(" (y/n) >>> ").strip().lower() == "y" else False
-                    if x:
-                        typewriter("Thank you for forgiving me!", style.GREEN)
-                        typewriter("here's a little something for you...", style.GREEN)
-                        time.sleep(0.5)
-                        print(f" {style.YELLOW}{style.BOLD}+500 gold{style.RESET}")
-                        typewriter("I gave you 500 gold, :)", style.GREEN)
-                    else:
-                        typewriter("I understand, I'll try to be better.", style.YELLOW)
-                elif bsvc >= 3:
-                    typewriter("cya! :)", style.GREEN)
-                time.sleep(5)
                 break
             elif i == "Level Up (Cheaper)":
                 if game['gold']>= item_costs["Level Up (Cheaper)"]:
@@ -741,10 +786,10 @@ def shop(game):
     return game
 
 def level_up_check(game):
-    if game["xp"] >= 175 * game["level"]:
+    if game["xp"] >= 450 * game["level"]:
         game["level"] += 1
         game["xp"] = 0
-        game["max_hp"] += game["max_hp"] * 0.2
+        game["max_hp"] += math.round(game["max_hp"] * 0.2)
         game["hp"] = game["max_hp"]
         typewriter(f"Congratulations! You leveled up to : {game['level']}!", style.GREEN)
         typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
