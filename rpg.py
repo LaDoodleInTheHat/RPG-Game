@@ -797,8 +797,15 @@ def random_encounter(game):
                 time.sleep(3)
                 return game           
 
-    elif i <= max(67, 99 - 2*game['level']):
-        
+    elif i <= max(77, 99 - 2*game['level']):
+        spinner(2, 0.1)
+        reward = r.randint(100, 200) + game['level'] * 10
+        game["gold"] += reward
+
+        typewriter("You found a treasure chest!", style.YELLOW, post_delay=1)
+        spinner(2, 0.1)
+        typewriter(f"You found {reward} gold!", style.GREEN)
+
         return game
     
     elif i <= 100:
@@ -905,7 +912,6 @@ def shop(game):
         # Level 1
         ("Small Health Potion", 20, 1),
         ("Wooden Sword", 35, 1),
-        ("Wooden Shield", 40, 1),
 
         # Level 2 
         ("Medium Health Potion", 50, 2),
@@ -976,7 +982,11 @@ def shop(game):
     print()
 
     typewriter(f"Gold : {game['gold']}", style.YELLOW)
-    choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (or 'exit' to leave) >>> {style.RESET}").strip())
+    try:
+        choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (or 'exit' to leave) >>> {style.RESET}").strip())
+    except ValueError:
+        typewriter("Invalid input. Please enter a number.", style.RED)
+        return game
 
     if 1 <= int(choice) <= len(current_items) + 1:
         if items[choice - 1][0] in weapon_stats:
