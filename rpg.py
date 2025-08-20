@@ -233,9 +233,9 @@ def use_item(game):
 
 
             elif item == "Wooden Shield":
-                game["defence"] += 0.2
+                game['skill_set']["defence"] += 0.2
                 typewriter(f"You equipped {item}!", style.GREEN)
-                typewriter(f"Your defence is now {game['defence']}.", style.GREEN)
+                typewriter(f"Your defence is now {game['skill_set']['defence']}.", style.GREEN)
                 game["inventory"].remove(item)
 
             elif item == "Medium Health Potion":
