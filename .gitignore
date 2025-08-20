@@ -3,3 +3,6 @@ cheat
 test.py
 *.json
 *.txt
+*.spec
+dist/
+build/
