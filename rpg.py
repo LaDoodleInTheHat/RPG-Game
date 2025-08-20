@@ -218,7 +218,7 @@ def use_item(game):
     global mi
     if game['inventory']:
         for idx, item in enumerate(game["inventory"], start=1):
-            print(f" {idx + 1}. {item}")
+            print(f" {idx}. {item}")
 
         choice = int(input("Pick an item to use (#) >>> ")) - 1
         if 0 <= choice < len(game["inventory"]):
@@ -865,12 +865,12 @@ def equip(game):
     print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
 
     print()
-    for idx, (name, min_dmg, max_dmg) in enumerate(game["weapons"]):
+    for idx, (name, min_dmg, max_dmg) in enumerate(game["weapons"], start=1):
         print(f"    {idx}: {name} {min_dmg} - {max_dmg} dmg")
         time.sleep(0.1)
     
     try:
-        game["equipped"] = int(input("\nChoose a weapon (#) >>> "))
+        game["equipped"] = int(input("\nChoose a weapon (#) >>> ")) - 1
     except Exception as e:
         print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
 
@@ -965,8 +965,8 @@ def shop(game):
     print()
 
     typewriter("Available Items: ", style.BOLD)
-    for idx, item in enumerate(current_items):
-        typewriter(f" {idx + 1}. {item[0]}: {item[1]} gold (Level {item[2]} Product)", delay=0.0075, post_delay=0.1)
+    for idx, item in enumerate(current_items, start=1):
+        typewriter(f" {idx}. {item[0]}: {item[1]} gold (Level {item[2]} Product)", delay=0.0075, post_delay=0.1)
     print()
 
     typewriter("Weapon Stats", style.BOLD)
