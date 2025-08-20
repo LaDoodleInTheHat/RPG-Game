@@ -718,7 +718,7 @@ def random_encounter(game):
                     qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
                     print()
                     dmg = r.randint(player_weapon[1] + 5*game['skill_set']['strength'], player_weapon[2] + 5*game['skill_set']['strength'])
-                    mdmg = r.randint(int(monster_damage*0.7), monster_damage) - 5*game['skill_set']['defence']
+                    mdmg = round(r.randint(int(monster_damage*0.7), monster_damage) - 5*game['skill_set']['defence'])
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
