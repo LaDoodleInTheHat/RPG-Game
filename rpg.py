@@ -47,7 +47,7 @@ def init_new_game():
         "gold": 0,            
         "inventory": [],         
         "weapons": [
-            ["Fists", 10, 20]
+            ["Fists", 5, 15]
         ],     
         "equipped": 0,      
         "artifacts": [], 
@@ -58,7 +58,9 @@ def init_new_game():
             "agility": 1,
             "luck": 1,
             "accuracy": 1,
-        }
+            "defence": 1
+        },
+        "used_items": []
     } if not os.path.exists('cheat') else {
         "level": 1,
         "hp": 9999,
@@ -77,7 +79,9 @@ def init_new_game():
             "agility": 1,
             "luck": 1,
             "accuracy": 1,
-        }
+            "defence": 1
+        },
+        "used_items": []
     }
 
 # Save game state to JSON file
@@ -108,12 +112,12 @@ def json_save(game):
             print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}") 
 
 # Typewriter effect for text output
-def typewriter(text, color=style.RESET):
+def typewriter(text, color=style.RESET, delay=0.02, post_delay=0.5):
     for c in text:
         print(f"{color}{c}{style.RESET}", end='', flush=True)
-        time.sleep(0.02)
+        time.sleep(delay)
     print()
-    time.sleep(0.5)
+    time.sleep(post_delay)
 
 # Load game state from JSON file
 def json_load():
@@ -134,7 +138,8 @@ def json_load():
                 "artifacts": list,
                 "cheat_mode": bool,
                 "xp": int,
-                "skill_set": dict
+                "skill_set": dict,
+                "used_items": list
             }
 
             # Validate required keys and types
@@ -160,7 +165,7 @@ def json_load():
 
             # Validate skill_set format
             for skill, level in game_state["skill_set"].items():
-                if skill not in ["strength", "agility", "luck", "accuracy"]:
+                if skill not in ["strength", "agility", "luck", "accuracy", "defence"]:
                     print(f"{style.RED} > Error loading file, Invalid skill: {skill}{style.RESET}")
                     return None
                 if not isinstance(level, int) or level < 1:
@@ -169,6 +174,10 @@ def json_load():
 
             # Validate artifacts format
             if not all(isinstance(a, str) for a in game_state["artifacts"]):
+                print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
+                return None
+            
+            if not all(isinstance(a, str) for a in game_state["used_items"]):
                 print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                 return None
 
@@ -189,8 +198,14 @@ def json_load():
 # Check for game over or victory conditions
 def check_game_over(game):
     if game["hp"] <= 0:
-        print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
-        return True
+        if "Phoenix's Feather" in game["inventory"] and not "Phoenix's Feather" in game["used_items"]:
+            print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}REVIVED!{style.RESET} {style.GREEN}You have been revived by the Phoenix's Feather.{style.RESET}")
+            game["hp"] = game["max_hp"] // 2
+            game["used_items"].append("Phoenix's Feather")
+            game['inventory'].remove("Phoenix's Feather")
+        else:    
+            print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
+            return True
     elif game["level"] == 25:
         print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
         game["artifacts"].append("Drago's Egg")
@@ -200,153 +215,142 @@ def check_game_over(game):
 
 # To use an item
 def use_item(game):
-    
-    if game["inventory"]:
-        for i, items in enumerate(game["inventory"], start=1):
-            print(f"{i}. {items}")
-            time.sleep(0.1)
+    global mi
+    if game['inventory']:
+        for idx, item in enumerate(game["inventory"], start=1):
+            print(f" {idx + 1}. {item}")
 
-        try:
-            item = game["inventory"][int(input(f"{style.BOLD}Which item would you like to use (#){style.RESET} >>> ")) - 1]
-        except (IndexError, ValueError) as e:
-            typewriter("Invalid item selection.", style.RED)
-            return game
-
-        # Mystic Cloak: buffs HP and all weapons, then removes itself
-        if item == 'Mystic Cloak':
-            game["hp"] += 20
-            game["max_hp"] += 20
-            for i in range(len(game['weapons'])):
-                game['weapons'][i][1] += 20
-                game['weapons'][i][2] += 20
-
-            game["inventory"].remove(item)
-            typewriter(f"You used a {item} and gained 20 hp to your max hp and buffed all your weapons!", style.GREEN)
-            time.sleep(0.5)
-            typewriter("Your cloak mysteriously dissipated and got absorbed into you and your items...", style.YELLOW)
-            print()
-
-        # Large Health Potion: heals 50 HP
-        elif item == 'Large Health Potion':
-            if game["hp"] + 50 > game["max_hp"]:
-                game["hp"] = game["max_hp"]
-            else:
-                game["hp"] += 50
-            game["inventory"].remove(item)
-            typewriter(f"You used a {item} and gained 50 hp!", style.GREEN)
-
-        # Small Health Potion: heals 20 HP
-        elif item == 'Small Health Potion':
-            if game["hp"] + 20 > game["max_hp"]:
-                game["hp"] = game["max_hp"]
-            else:
-                game["hp"] += 20
-            game["inventory"].remove(item)
-            typewriter(f"You used a {item} and gained 20 hp!", style.GREEN)
-
-        # Elixir of Fortitude: heals 100 HP
-        elif item == 'Elixir of Fortitude':
-            if game["hp"] + 100 > game["max_hp"]:
-                game["hp"] = game["max_hp"]
-            else:
-                game["hp"] += 100
-            game["inventory"].remove(item)
-            typewriter(f"You used an {item} and gained 100 hp!", style.GREEN)
-
-        # Phoenix Feather: adds a spell weapon if not already known
-        elif item == 'Phoenix Feather':
-            spell = ["Phoenix's Flare Blitz", 100, 150]
-            if not spell in game["weapons"]:
-                game["weapons"].append(spell)
-                typewriter(f"You used a {item} and learned a new spell: {spell[0]}!", style.GREEN)
-                time.sleep(0.5)
-                typewriter("Equip spell through 'Equip' command", style.YELLOW)
-            else:
-                typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
-
-            game["inventory"].remove(item)
-            typewriter('The feather has been used...', style.YELLOW)
+        choice = int(input("Pick an item to use (#) >>> ")) - 1
+        if 0 <= choice < len(game["inventory"]):
+            item = game["inventory"][choice]
             
-        # Magic Scroll: grants a random spell weapon if not already known
-        elif item == 'Magic Scroll':
-            spells = [["Arcane Blast", 80, 120], ["Electrify", 60, 100], ["Frostbite", 70, 110], ["Fireball", 90, 130], ["Meteor Shower", 100, 150], ["Tornado Blast", 85, 125]]
+            if item == "Small Health Potion":
+                game["hp"] += 20
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
 
-            spell = r.choice(spells)
-            if spell not in game["weapons"]:
-                game["weapons"].append(spell)
-                typewriter(f"You used a {item} and learned a new spell: {spell[0]}!", style.GREEN)
-                time.sleep(0.5)
-                typewriter("Equip spell through 'Equip' command", style.YELLOW)
-            else:
-                typewriter(f"You already know the spell: {spell[0]}", style.YELLOW)
-                
 
-            game["inventory"].remove(item)
-            typewriter('The scroll has been used...', style.YELLOW)
+            elif item == "Wooden Shield":
+                game["defence"] += 0.2
+                typewriter(f"You equipped {item}!", style.GREEN)
+                typewriter(f"Your defence is now {game['defence']}.", style.GREEN)
+                game["inventory"].remove(item)
 
-        elif item == 'Infinity Heal':
-            game['hp'] = game['max_hp']
-            game['inventory'].remove(item)
-            typewriter("You have just recovered all of your hp with your Infinity Heal", style.GREEN)
-        
-        elif item == "Infinity Buff":
-            for w in range(0,len(game["weapons"])):
-                game["weapons"][w][1] += 100
-                game["weapons"][w][2] += 100
-            game["inventory"].remove(item)
-            typewriter("You used an Infinity Buff and increased all your weapon's damage!", style.GREEN)
+            elif item == "Medium Health Potion":
+                game["hp"] += 50
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
 
-        elif item == "Secret Map":
-            if mi:
-                typewriter("You used the Secret Map!", style.GREEN)
-                time.sleep(0.5)
-                typewriter("It reveals a hidden path...", style.GREEN)
-                time.sleep(0.5)
-            else:
-                typewriter("You don't seem to know how to use this...", style.RED)
+            elif item == "Large Health Potion":
+                game["hp"] += 90
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
 
-        # Default: item cannot be used in battle
+            elif item == "Beginner's Scroll":
+                spells = [["Flare Dash", 80, 120], ["Icicle Barrage", 100, 150], ["Earth Shatter", 120, 180]]
+                spell = r.choice(spells, weights=[50, 35, 15])
+                typewriter(f"You learned a new spell: {spell[0]}!", style.GREEN)
+                game["spells"].append(spell)
+                game["inventory"].remove(item)
+                typewriter(f"The Scroll was used up", style.YELLOW)
+
+            elif item == "Assassin's Cloak" and not "Assassin's Cloak" in game['used_items']:
+                game['skill_set']['agility'] += 5
+                game['skill_set']['accuracy'] += 5
+
+                typewriter(f"You equipped {item}!", style.GREEN)
+                typewriter(f"Your stats are now {game['skill_set']}.", style.GREEN)
+                game["inventory"].remove(item)
+                game['used_items'].append(item)
+
+            elif item == "Elite Health Potion":
+                game["hp"] += 150
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
+
+            elif item == "Secret Map":
+                if not mi:
+                    typewriter("You don't seem to know how to use this item!", style.RED)
+
+            elif item == "Assassin Build Scroll" and "Assassin's Cloak" in game['used_items'] and not "Assassin's Build Scroll" in game['used_items']:
+                game["weapons"].append(["Assassin's Dagger", 100, 200])
+                game["skill_set"]["agility"] += 5
+                game["skill_set"]["accuracy"] += 5
+                game["used_items"].append(item)
+                typewriter("You have successfully created the Assassin Build!", style.GREEN)
+                typewriter(f"Your new weapon is: {game['weapons'][-1][0]}")
+                typewriter(f"Your new stats are: {game['skill_set']}")
+
+            elif item == "Legendary Health Potion":
+                game["hp"] += 200
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
+
+            elif item == "Divine Health Potion":
+                game["hp"] += 300
+                game["hp"] = min(game["hp"], game["max_hp"])
+                typewriter(f"You used {item}!", style.GREEN)
+                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                game["inventory"].remove(item)
+
+            elif item == "Mystic Cloak" and not "Mystic Cloak" in game['used_items']:
+                new_weapons = []
+                for w in game["weapons"]:
+                    w[1] += 50
+                    w[2] += 50
+
+                    new_weapons.append(w)
+
+                game["weapons"] = new_weapons
+                game["max_hp"] += 50
+                game["hp"] = game["max_hp"]
+
+                typewriter("You have used the Mystic Cloak and buffed all your weapons by 50 dmg and your HP, also regenerated to max.", style.GREEN)
+                typewriter("Your new stats are: ", style.GREEN)
+                typewriter(f"HP: {game['hp']}/{game['max_hp']}", style.GREEN)
+                for w in game["weapons"]:
+                    typewriter(f" - {w[0]}: {w[1]}-{w[2()]}", style.GREEN, delay=0.01)
+                game["inventory"].remove(item)
+                game["used_items"].append(item)
         else:
-            typewriter(f"You can't use {item} right now!", style.RED)
-        
-        return game
+            typewriter("Invalid choice.", style.RED)
     else:
-        typewriter("You have no items to use!", style.RED)
-        return game
+        typewriter("You don't have anything to use!", style.RED)
+    
+    return game
 
 def LaDoodle_dialouge(game):
     global nsvc, x, bsvc, y
     if bsvc == 0:
-        typewriter("...", style.YELLOW)
-        time.sleep(1)
-        typewriter("I see you're a traveler. What brings you here?", style.YELLOW)
-        time.sleep(0.5)
-        typewriter("Oh, I forgot, ur playing the game",style.GREEN)
-        time.sleep(0.5)
-        typewriter("Weeeelll.", style.GREEN)
-        time.sleep(0.25)
-        typewriter("I'm Krivi's avatar, LaDoodleInTheHat.", style.GREEN)
-        time.sleep(0.5)
-        typewriter("Well without the hat rlly, cause I lost it.", style.YELLOW)
-        time.sleep(0.5)
+        typewriter("...", style.YELLOW, post_delay=1.5)
+        typewriter("I see you're a traveler. What brings you here?", style.YELLOW, post_delay=1)
+        typewriter("Oh, I forgot, ur playing the game",style.GREEN, post_delay=1)
+        typewriter("Weeeelll.", style.GREEN, post_delay=0.75)
+        typewriter("I'm Krivi's avatar, LaDoodleInTheHat.", style.GREEN, post_delay=1)
+        typewriter("Well without the hat rlly, cause I lost it.", style.YELLOW, post_delay=1)
         typewriter("Have you seen Noah?", style.YELLOW)
         if input(" (y/n) > ").strip().lower() == "y":
             if nsvc > 0:
-                typewriter("Oh you have!", style.GREEN)
-                time.sleep(0.5)
-                typewriter("That's great to hear!", style.GREEN)
-                time.sleep(0.5)
+                typewriter("Oh you have!", style.GREEN, post_delay=1)
+                typewriter("That's great to hear!", style.GREEN, post_delay=1)
                 typewriter("Then you must have my hat!", style.GREEN)
                 if input(" (y/n) > ").strip().lower() == "y":
                     if "LaDoodle's Hat" in game['artifacts']:
-                        typewriter("NIIIICCCEEEE", style.GREEN)
-                        time.sleep(0.5)
+                        typewriter("NIIIICCCEEEE", style.GREEN, post_delay=1)
                         typewriter("Can you give it back to me pls?", style.GREEN)
                         if input(" (y/n) > ").strip().lower() == 'y':
-                            
                             typewriter("Thx man.", style.GREEN)
                             game['artifacts'].remove("LaDoodle's Hat")
-                            time.sleep(0.1)
                             print(f" {style.BOLD}- LaDoodle's Hat {style.RESET} ")
                             time.sleep(0.1)
                             print(f" {style.BOLD}+ 500 Gold {style.RESET} ")
@@ -356,82 +360,61 @@ def LaDoodle_dialouge(game):
                     else:
                         typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
             else:
-                typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
-
-                time.sleep(0.5)
-                typewriter("He's been missing for a while now...", style.YELLOW)
-                time.sleep(0.5)
-                typewriter("And I think he has my hat...", style.YELLOW)
-                time.sleep(0.5)
+                typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED, post_delay=1)
+                typewriter("He's been missing for a while now...", style.YELLOW, post_delay=1)
+                typewriter("And I think he has my hat...", style.YELLOW, post_delay=1)
                 if not ('Secret Map' in game['inventory']):
-                    typewriter("I have this map that might help you find him.", style.YELLOW)
-                    time.sleep(0.1)
+                    typewriter("I have this map that might help you find him.", style.YELLOW, post_delay=1)
                     print(f" {style.BOLD}+ Secret Map {style.RESET} ")
                     time.sleep(0.1)
                     game["inventory"].append("Secret Map")
-                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
-                    time.sleep(0.5)
+                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW, post_delay=1)
                     typewriter("It would be nice if you can get my hat back.", style.GREEN)
                 elif 'Secret Map' in game['inventory']:
-                    typewriter("I see you already have the map.", style.YELLOW)
-                    time.sleep(0.5)
-                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
-                    time.sleep(0.5)
+                    typewriter("I see you already have the map.", style.YELLOW, post_delay=1)
+                    typewriter("Use it to find Noah and maybe my Hat", style.YELLOW, post_delay=1)
                     typewriter("It would be nice if you can get my hat back.", style.GREEN)
 
                 x = True
 
         else:
             time.sleep(0.5)
-            typewriter("He's been missing for a while now...", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("And I think he has my hat...", style.YELLOW)
-            time.sleep(0.5)
+            typewriter("He's been missing for a while now...", style.YELLOW, post_delay=1)
+            typewriter("And I think he has my hat...", style.YELLOW, post_delay=1)
             if not ('Secret Map' in game['inventory']):
-                typewriter("I have this map that might help you find him.", style.YELLOW)
-                time.sleep(0.1)
+                typewriter("I have this map that might help you find him.", style.YELLOW, post_delay=0.6)
                 print(f" {style.BOLD}+ Secret Map {style.RESET} ")
                 time.sleep(0.1)
                 game["inventory"].append("Secret Map")
-                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
-                time.sleep(0.5)
+                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW, post_delay=1)
                 typewriter("It would be nice if you can get my hat back.", style.GREEN)
             elif 'Secret Map' in game['inventory']:
-                typewriter("I see you already have the map.", style.YELLOW)
-                time.sleep(0.5)
-                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW)
-                time.sleep(0.5)
-                typewriter("It would be nice if you can get my hat back.", style.GREEN)
+                typewriter("I see you already have the map.", style.YELLOW, post_delay=1)
+                typewriter("Use it to find Noah and maybe my Hat", style.YELLOW, post_delay=1)
+                typewriter("It would be nice if you can get my hat back.", style.GREEN, post_delay=1)
 
             x = True
 
         time.sleep(0.5)
-        typewriter("Anyway, you can buy stuff from here", style.GREEN)
-        time.sleep(0.5)
-        typewriter("Pretty op stuff :)", style.GREEN)
-        time.sleep(0.5)
+        typewriter("Anyway, you can buy stuff from here", style.GREEN, post_delay=1)
+        typewriter("Pretty op stuff :)", style.GREEN, post_delay=1)
         typewriter("Let's get shopping!", style.GREEN)
 
         mi = True
 
     elif bsvc == 1:
-        typewriter("Welcome back my friend!", style.GREEN)
-        time.sleep(0.5)
+        typewriter("Welcome back my friend!", style.GREEN, post_delay=1)
         if x:
-            typewriter("Have you seen Noah?", style.YELLOW)
-            time.sleep(0.5)
+            typewriter("Have you seen Noah?", style.YELLOW, post_delay=1)
             typewriter("Yet?", style.YELLOW)
             if input(" (y/n) > ").strip().lower() == "y":
                 if nsvc > 0:
-                    typewriter("Oh finally!", style.GREEN)
-                    time.sleep(0.5)
-                    typewriter("That's great to hear!", style.GREEN)
-                    time.sleep(0.5)
+                    typewriter("Oh finally!", style.GREEN, post_delay=1)
+                    typewriter("That's great to hear!", style.GREEN, post_delay=1)
                     typewriter("Then you must have my hat!", style.GREEN)
                     if input(" (y/n) > ").strip().lower() == "y":
                         if "LaDoodle's Hat" in game['artifacts']:
-                            typewriter("NIIIICCCEEEE", style.GREEN)
-                            time.sleep(0.5)
+                            typewriter("NIIIICCCEEEE", style.GREEN, post_delay=1)
                             typewriter("Can you give it back to me pls?", style.GREEN)
                             if input(" (y/n) > ").strip().lower() == 'y':
                                 
@@ -448,22 +431,16 @@ def LaDoodle_dialouge(game):
                             typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
                 else:
                     typewriter("Dude. Don't lie, I'm a god but like the only thing I can't do is find my hat.", style.RED)
-        typewriter("You know the drill.")
-        time.sleep(0.5)
+        typewriter("You know the drill.", post_delay=1)
         typewriter("Let's get shopping!", style.GREEN)
 
     if bsvc >= 2 :
         if nsvc > 0 and not y:
-            typewriter("You saw Noah? That's incredible!", style.GREEN)
-            time.sleep(0.5)
-            typewriter("He's been missing for ages... I was starting to worry.", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("Did he seem alright? What was he up to?", style.YELLOW)
-            time.sleep(0.5)
-            typewriter("If you hear anything interesting, let me know. He's a good friend.", style.GREEN)
-            time.sleep(0.5)
-            typewriter("I see you have my hat", style.GREEN)
-            time.sleep(0.5) 
+            typewriter("You saw Noah? That's incredible!", style.GREEN, post_delay=1)
+            typewriter("He's been missing for ages... I was starting to worry.", style.YELLOW, post_delay=1)
+            typewriter("Did he seem alright? What was he up to?", style.YELLOW, post_delay=1)
+            typewriter("If you hear anything interesting, let me know. He's a good friend.", style.GREEN, post_delay=1.5)
+            typewriter("I see you have my hat", style.GREEN, post_delay=1)
             typewriter("Can you give it back to me pls?", style.GREEN)
             if input(" (y/n) > ").strip().lower() == 'y':
                 typewriter("Thx man.", style.GREEN)
@@ -494,8 +471,7 @@ def LaDoodle_dialouge(game):
                 typewriter(":(", style.YELLOW)
             y = True
 
-        typewriter("Same stuff as before my adventurer friend!", style.GREEN)
-        time.sleep(0.5)
+        typewriter("Same stuff as before my adventurer friend!", style.GREEN, post_delay=1)
         typewriter("Check them out!", style.GREEN)
 
     return game
@@ -720,7 +696,7 @@ def random_encounter(game):
         typewriter("Invalid input! Defaulting to normal encounter.", style.RED)
         i = r.randint(0, 100)
 
-    if i <= max(33, 79 - 2*game['level']):
+    if i <= max(43, 89 - 2*game['level']):
         # Monster fight
         i = r.randint(0, 100)
         for monster in monsters[game['level'] - 1]:
@@ -742,7 +718,7 @@ def random_encounter(game):
                     qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
                     print()
                     dmg = r.randint(player_weapon[1] + 5*game['skill_set']['strength'], player_weapon[2] + 5*game['skill_set']['strength'])
-                    mdmg = r.randint(int(monster_damage*0.7), monster_damage)
+                    mdmg = r.randint(int(monster_damage*0.7), monster_damage) - 5*game['skill_set']['defence']
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
@@ -793,8 +769,8 @@ def random_encounter(game):
 
                         spinner(2, 0.1)
 
-                        i = r.randint(1, 2)
-                        if i == 1 and monster_hp > 0:
+                        i = r.randint(0, 100)
+                        if i <= 60 + 3*game['level'] - 5*game['skill_set']['agility'] and monster_hp > 0:
                             typewriter("The monster is preparing to attack!", style.YELLOW)
 
                             spinner(2, 0.1)
@@ -822,62 +798,6 @@ def random_encounter(game):
                 return game           
 
     elif i <= max(67, 99 - 2*game['level']):
-        # Treasure Chest Encounter
-        typewriter("You found a mysterious treasure chest!", style.YELLOW)
-        spinner(1, 0.1)
-        reward_type = r.choices(["gold", "item"], weights=[70, 30])[0]
-        if reward_type == "gold":
-            gold_found = r.randint(30, 120) + game["level"] * 20
-            typewriter(f"You open the chest and find {gold_found} gold!", style.GREEN)
-            game["gold"] += gold_found
-        else:
-            items = [
-                "Small Health Potion",
-                "Large Health Potion",
-                "Magic Scroll",
-                "Iron Sword",
-                "Steel Axe",
-                "Enchanted Dagger",
-                "Phoenix Feather",
-                "Elixir of Fortitude",
-                "Mystic Cloak",
-                "(Totally) Mjölnir",
-                "Shadow Amulet"
-            ]
-
-            # Weapons and their damage ranges
-            weapon_stats = {
-                "Iron Sword": ["Iron Sword", 20, 50],
-                "Steel Axe": ["Steel Axe", 30, 55],
-                "Enchanted Dagger": ["Enchanted Dagger", 15, 70],
-                "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220]
-            }
-
-            item = r.choice(items)
-
-            # Check if item is a weapon
-            if item in weapon_stats:
-                # Only add if not already owned
-                if not item in game["weapons"]:
-                    game["weapons"].append(weapon_stats[item])
-                    typewriter(f"You found a {item}! (Damage {item[1]}-{item[2]})", style.CYAN)
-                else:
-                    typewriter(f"You found a {item}, but you already have one. You sell it for 50 gold.", style.YELLOW)
-                    game["gold"] += 50
-            
-            # Check if item is an artifact
-            elif item == 'Shadow Amulet':
-                if not item in game['artifacts']:
-                    game['artifacts'].append(item)
-                    typewriter(f"You found a {item}!", style.CYAN)
-                else:
-                    typewriter(f"You found a {item}, but you already have one. It magicly turns into 50 gold.", style.YELLOW)
-                    game["gold"] += 50
-            
-            # Otherwise, add to inventory
-            else:
-                game["inventory"].append(item)
-                typewriter(f"You found a {item}!", style.CYAN)
         
         return game
     
@@ -944,8 +864,9 @@ def random_encounter(game):
 def equip(game):
     print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
 
-    for weapon in game["weapons"]:
-        print(f"\n    {game['weapons'].index(weapon) + 1}: {weapon[0]} {weapon[1]} - {weapon[2]} dmg")
+    print()
+    for idx, (name, min_dmg, max_dmg) in enumerate(game["weapons"]):
+        print(f"    {idx + 1}: {name} {min_dmg} - {max_dmg} dmg")
         time.sleep(0.1)
     
     try:
@@ -953,7 +874,7 @@ def equip(game):
     except Exception as e:
         print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
 
-    typewriter(f"You have equipped the {game['weapons'][game['equipped']]}", style.BOLD)
+    typewriter(f"You have equipped the {game['weapons'][game['equipped']][0]}", style.BOLD)
     return game
 
 # Print current game status
@@ -978,93 +899,104 @@ def quit_game(game):
 
 # The shop to buy items and level ups
 def shop(game):
+    # Format (name, cost, level)
 
-    # Weapons and their damage ranges
+    items = [
+        # Level 1
+        ("Small Health Potion", 20, 1),
+        ("Wooden Sword", 35, 1),
+        ("Wooden Shield", 40, 1),
+
+        # Level 2 
+        ("Medium Health Potion", 50, 2),
+        ("Stone Axe", 60, 2),
+
+        # Level 3
+        ("Large Health Potion", 200, 3),
+        ("Beginner's Scroll", 200, 3),
+
+        # Level 4
+        ("Shadow Dagger", 250, 4),
+        ("Assassin's Cloak", 300, 4),
+        ("Iron Sword", 350, 4),
+
+        # Level 5
+        ("Phoenix Feather", 400, 5),
+        ("Elite Health Potion", 400, 5),
+
+        # Level 6
+        ("Revolver", 450, 6),
+        ("Secret Map", 1500, 6),
+
+        # Level 7
+        ("Assassin Build Scroll", 550, 7),
+        ("Legendary Health Potion", 550, 7),
+
+        # Level 10
+        ("Divine Health Potion", 1000, 10),
+        ("Reaper's Scythe", 1000, 10),
+
+        # Level 12
+        ("Mystic Cloak", 1200, 12),
+        ("Beginner Stat Buff", 750, 12),
+
+        # Level 15
+        ("Advanced Stat Buff", 1000, 15),
+        ("Ultimate Magic Scroll", 1500, 15)
+    ]
+
+    # Format : [name, min_damage, max_damage]
     weapon_stats = {
-        "Iron Sword": ["Iron Sword", 20, 50],
-        "Steel Axe": ["Steel Axe", 30, 55],
-        "Enchanted Dagger": ["Enchanted Dagger", 15, 70],
-        "(Totally) Mjölnir": ["(Totally) Mjölnir", 100, 220],
-        "Crystal Bow": ["Crystal Bow", 40, 80],
-        "Shadow Blade": ["Shadow Blade", 60, 120],
-        "Dragon Spear": ["Dragon Spear", 80, 160],
-        "Thunder Staff": ["Thunder Staff", 70, 140],
-        "Frost Hammer": ["Frost Hammer", 55, 110],
-        "Solar Rapier": ["Solar Rapier", 90, 180],
-        "Venom Whip": ["Venom Whip", 35, 100],
-        "Celestial Halberd": ["Celestial Halberd", 120, 240],
-        "Void Scythe": ["Void Scythe", 150, 300],
+        "Wooden Sword": ["Wooden Sword", 15, 30],
+        "Stone Axe": ["Stone Axe", 20, 40],
+        "Iron Sword": ["Iron Sword", 45, 60],
+        "Revolver": ["Revolver", 100, 120],
+        "Reaper's Scythe": ["Reaper's Scythe", 150, 300]
     }
 
-    item_costs = {
-        "Small Health Potion": 30,
-        "Large Health Potion": 90,
-        "Magic Scroll": 400,
-        "Secret Map": 1000,
-        "Iron Sword": 100,
-        "Steel Axe": 200,
-        "Enchanted Dagger": 150,
-        "(Totally) Mjölnir": 500,
-        "Phoenix Feather": 300,
-        "Elixir of Fortitude": 200,
-        "Mystic Cloak": 600,
-        "Shadow Amulet": 350,
-        "Crystal Bow": 250,
-        "Shadow Blade": 400,
-        "Dragon Spear": 600,
-        "Thunder Staff": 500,
-        "Frost Hammer": 350,
-        "Solar Rapier": 700,
-        "Venom Whip": 300,
-        "Celestial Halberd": 900,
-        "Void Scythe": 1200,
-    }
+    current_items = [item for item in items if item[2] <= game["level"]]
+    current_weapon_stats = {name: stats for name, stats in weapon_stats.items() if stats[0] in [item[0] for item in current_items]}
 
-    typewriter(f'Welcome adventurer to my shop! I have an assortment of items to buy. Pick your choice:', style.BOLD)
-
-    while True:
-        for idx, (item, cost) in enumerate(item_costs.items(), start=1):
-            print(f'{idx}. {item}: {cost} gold')
-            time.sleep(0.1)
-
-        print()
-        typewriter("Weapons:")
-        print()
-        for item, (name, min_dmg, max_dmg) in weapon_stats.items():
-            print(f"{style.YELLOW} {name}: {min_dmg}-{max_dmg} dmg {style.RESET}")
-
-        print(f"\n{style.YELLOW}Current Gold: {game['gold']} {style.RESET}")
-        try:
-            choice = str(input(f"{style.CYAN}Enter the item you wish to buy (or 'exit' to leave) >>> {style.RESET}")).strip()
-        except Exception as e:
-            print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
-            continue
-
-        if choice == "exit":
-            typewriter(f"Thank you for visiting the shop!", style.BLUE)
-            break
-        elif choice in weapon_stats:
-            if game['gold'] >= item_costs[choice]:
-                game["gold"] -= item_costs[choice]
-                game["weapons"].append(weapon_stats[choice])
-                typewriter(f"You have purchased {choice}!", style.GREEN)
-            else:
-                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
-        elif choice in item_costs:
-            if game["gold"] >= item_costs[choice]:
-                game["gold"] -= item_costs[choice]
-                game["inventory"].append(choice)
-                typewriter(f"You have purchased {choice}!", style.GREEN)
-            else:
-                typewriter(f"You do not have enough gold to buy {choice}.", style.RED)
-        else:
-            typewriter(f" > Invalid item choice, Make sure you type it perfectly", style.RED)
-
-        os.system('cls' if os.name == 'nt' else 'clear')
-
-
-    time.sleep(2)
     print()
+    typewriter("Welcome to the Doodle Shop!", style.BOLD)
+    typewriter("You can find an assortment of items and weapons here.", style.BOLD)
+    typewriter("Feel free to browse and make a purchase!", style.BOLD)
+    typewriter("You will find more items in this shop the more you level up!", style.BOLD)
+    print()
+
+    typewriter("Available Items: ", style.BOLD)
+    for idx, item in enumerate(current_items):
+        typewriter(f" {idx + 1}. {item[0]}: {item[1]} gold (Level {item[2]} Product)", delay=0.0075, post_delay=0.1)
+    print()
+
+    typewriter("Weapon Stats", style.BOLD)
+    for name, stats in current_weapon_stats.items():
+        typewriter(f" {name}: {stats[1]} - {stats[2]} dmg", delay=0.0075, post_delay=0.1)
+
+    print()
+    choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (or 'exit' to leave) >>> {style.RESET}").strip())
+
+    if 1 <= int(choice) <= len(current_items) + 1:
+        if items[choice - 1][0] in weapon_stats:
+            weapon = weapon_stats[items[choice - 1][0]]
+            if game["gold"] >= items[choice - 1][1]:
+                game["gold"] -= items[choice - 1][1]
+                game["weapons"].append(weapon)
+                typewriter(f"You have purchased {weapon[0]}!", style.GREEN)
+            else:
+                typewriter(f"You do not have enough gold to purchase {weapon[0]}.", style.RED)
+        else:
+            item = current_items[int(choice) - 1]
+            if game["gold"] >= item[1]:
+                game["gold"] -= item[1]
+                game["inventory"].append(item[0])
+                typewriter(f"You have purchased {item[0]}!", style.GREEN)
+            else:
+                typewriter(f"You do not have enough gold to purchase {item[0]}.", style.RED)
+    elif choice.lower() == "exit":
+        typewriter("Exiting shop...", style.YELLOW)
+    else:
+        typewriter("Invalid choice. Please try again.", style.RED)
 
     return game
 
@@ -1109,6 +1041,8 @@ def main():
     i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
     game = json_load() if i == "Y" else init_new_game()
+
+    time.sleep(2)
 
     while True:
         try:
