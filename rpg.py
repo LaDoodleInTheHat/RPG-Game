@@ -740,7 +740,7 @@ def random_encounter(game):
                         else:
                             typewriter("Your attack missed!", style.RED)
                         if monster_hp > 0:
-                            if r.randint(0, 100) < 50 + 2*game['level'] - 5*game['skill_set']['agility']:
+                            if r.randint(0, 100) < 75 + 2*game['level'] - 5*game['skill_set']['agility']:
                                 his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
                                 typewriter(his_attack, style.RED)
@@ -974,6 +974,8 @@ def shop(game):
         typewriter(f" {name}: {stats[1]} - {stats[2]} dmg", delay=0.0075, post_delay=0.1)
 
     print()
+
+    typewriter(f"Gold : {game['gold']}", style.YELLOW)
     choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (or 'exit' to leave) >>> {style.RESET}").strip())
 
     if 1 <= int(choice) <= len(current_items) + 1:
