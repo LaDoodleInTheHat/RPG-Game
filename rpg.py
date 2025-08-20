@@ -866,11 +866,11 @@ def equip(game):
 
     print()
     for idx, (name, min_dmg, max_dmg) in enumerate(game["weapons"]):
-        print(f"    {idx + 1}: {name} {min_dmg} - {max_dmg} dmg")
+        print(f"    {idx}: {name} {min_dmg} - {max_dmg} dmg")
         time.sleep(0.1)
     
     try:
-        game["equipped"] = int(input("\nChoose a weapon (#) >>> ")) - 1
+        game["equipped"] = int(input("\nChoose a weapon (#) >>> "))
     except Exception as e:
         print(f"\n{style.BOLD}{style.RED}ERROR: {style.RESET}{style.RED}{e}{style.RESET}")
 
