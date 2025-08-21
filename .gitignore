@@ -6,4 +6,5 @@ test.py
 *.spec
 dist/
 build/
-*md
+*.md
+*.png

@@ -482,12 +482,6 @@ def random_encounter(game):
     spinner(1, 0.1)
 
     # Monster format: [name, hp, damage, reward, chance, xp drop]
-    # The chance value is cumulative; the first monster is picked if i <= chance, next if i <= chance, etc.
-    # Each level has progressively harder monsters, higher rewards and xp drops.
-    # Player starts with 100 HP, weapon damage 10-20, and no armor.
-    # Let's balance early monsters to be a real threat but not overwhelming.
-    # Increase monster HP and damage, and XP/reward for challenge.
-    # Adjusted for better balance: monsters scale more smoothly, rewards and XP are more consistent.
     monsters = [
         # Level 1 (Player: HP 100, Weapon 10-20)
         [
@@ -707,18 +701,13 @@ def random_encounter(game):
                 typewriter(f"You ready your {player_weapon[0]}!", style.YELLOW)
 
                 time.sleep(1)
-                monster_hp = monster[1]
-                monster_name = monster[0]
-                monster_damage = monster[2]
-                reward_gold = monster[3]
-                xp_drop = monster[5]
 
                 # Battle loop
-                while monster_hp > 0 and game["hp"] > 0:
+                while monster[1] > 0 and game["hp"] > 0:
                     qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
                     print()
                     dmg = r.randint(player_weapon[1] + 5*game['skill_set']['strength'], player_weapon[2] + 5*game['skill_set']['strength'])
-                    mdmg = round(r.randint(int(monster_damage*0.7), monster_damage) - 5*game['skill_set']['defence'])
+                    mdmg = round(r.randint(int(monster[2]*0.7), monster[2]) - 5*game['skill_set']['defence'])
                     os.system('cls' if os.name == 'nt' else 'clear')
 
                     if qu == "run":
@@ -727,40 +716,36 @@ def random_encounter(game):
                             return game
                         else:
                             typewriter("You failed to escape!", style.RED)
-                            if monster_hp > 0:
+                            if monster[1] > 0:
                                 if r.randint(0, 100) < 50 - 2*game['level'] + 5*game['skill_set']['agility']:
-                                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                     game["hp"] -= mdmg
-                                    typewriter(his_attack, style.RED)
+                                    typewriter(f"{monster[0]} strikes you for {mdmg} damage!", style.RED)
+                                else:
+                                    typewriter("The monster's attack missed!", style.GREEN)
                     elif qu == "attack":
                         if r.randint(0, 100) < 75 - 3*game['level'] + 5*game['skill_set']['accuracy']:
-                            my_attack = f"You attack {monster_name} for {dmg} damage!"
-                            monster_hp -= dmg
-                            typewriter(my_attack, style.GREEN)
+                            monster[1] -= dmg
+                            typewriter(f"You attack {monster[0]} for {dmg} damage!", style.GREEN)
                         else:
                             typewriter("Your attack missed!", style.RED)
-                        if monster_hp > 0:
+                        if monster[1] > 0:
                             if r.randint(0, 100) < 75 + 2*game['level'] - 5*game['skill_set']['agility']:
-                                his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                 game["hp"] -= mdmg
-                                typewriter(his_attack, style.RED)
+                                typewriter(f"{monster[0]} strikes you for {mdmg} damage!", style.RED)
                             else:
                                 typewriter("The monster's attack missed!", style.GREEN)
                     elif qu == "counter":
                         if r.randint(0, 100) <= 75 - 3*game['level'] + 5*game['skill_set']['accuracy']:
-                            his_attack = f"{monster_name} tried to strike you, but failed!"
-                            dmg = r.randint(max(dmg, mdmg)-min(dmg, mdmg), (max(dmg, mdmg)-min(dmg, mdmg))*2)
-                            my_attack = f"You counter {monster_name}'s attack for {dmg}!"
-                            monster_hp -= dmg
-                            typewriter(his_attack, style.GREEN)
-                            typewriter(my_attack, style.GREEN)
+                            dmg = r.randint(min(player_weapon[2], monster[2]), round(max(player_weapon[2], monster[2]) * 1.5))
+                            monster[1] -= dmg
+                            typewriter(f"{monster[0]} tried to strike you, but failed!", style.GREEN)
+                            typewriter(f"You counter {monster[0]}'s attack for {dmg}!", style.GREEN)
                         else:
                             typewriter("Your counter failed!", style.RED)
-                            if monster_hp > 0:
+                            if monster[1] > 0:
                                 if r.randint(0, 100) < 75 - 3*game['level'] + 5*game['skill_set']['agility']:
-                                    his_attack = f"{monster_name} strikes you for {mdmg} damage!"
                                     game["hp"] -= mdmg
-                                    typewriter(his_attack, style.RED)
+                                    typewriter(f"{monster[0]} strikes you for {mdmg} damage!", style.RED)
                                 else:
                                     typewriter("The monster's attack missed!", style.GREEN)
                     elif qu == "useItem":
@@ -770,29 +755,29 @@ def random_encounter(game):
                         spinner(2, 0.1)
 
                         i = r.randint(0, 100)
-                        if i <= 60 + 3*game['level'] - 5*game['skill_set']['agility'] and monster_hp > 0:
+                        if i <= 60 + 3*game['level'] - 5*game['skill_set']['agility'] and monster[1] > 0:
                             typewriter("The monster is preparing to attack!", style.YELLOW)
 
                             spinner(2, 0.1)
 
-                            his_attack = f"{monster_name} strikes you for {mdmg} damage!"
+                            his_attack = f"{monster[0]} strikes you for {mdmg} damage!"
                             game["hp"] -= mdmg
                             typewriter(his_attack, style.RED)
                             
                         else:
                             typewriter("You safely use your item.", style.GREEN)
 
-                    hp_line = f"Your HP: {max(game['hp'],0)} | {monster_name} HP: {max(monster_hp,0)}"
+                    hp_line = f"Your HP: {max(game['hp'],0)} | {monster[0]} HP: {max(monster[1],0)}"
                     typewriter(hp_line, style.YELLOW)
 
                     time.sleep(2)
 
-                if monster_hp <= 0:
-                    typewriter(f"{monster_name} is defeated!", style.MAGENTA)
-                    typewriter(f"You gain {reward_gold} gold!", style.YELLOW)
-                    typewriter(f"You gain {xp_drop} XP!", style.GREEN)
-                    game["gold"] += reward_gold
-                    game["xp"] += xp_drop
+                if monster[1] <= 0:
+                    typewriter(f"{monster[0]} is defeated!", style.MAGENTA)
+                    typewriter(f"You gain {monster[3]} gold!", style.YELLOW)
+                    typewriter(f"You gain {monster[5]} XP!", style.GREEN)
+                    game["gold"] += monster[3]
+                    game["xp"] += monster[5]
 
                 time.sleep(3)
                 return game           
