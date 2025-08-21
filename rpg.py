@@ -146,10 +146,10 @@ def json_load():
             for key, expected_type in required_keys.items():
                 if key not in game_state:
                     print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
-                    return None
+                    return init_new_game()
                 if not isinstance(game_state[key], expected_type):
                     print(f"{style.RED} > Error loading file, Invalid Format{style.RESET}")
-                    return None
+                    return init_new_game()
 
             # Validate weapons format
             for weapon in game_state["weapons"]:
@@ -161,25 +161,25 @@ def json_load():
                         weapon[2] > 0 and
                         weapon[2] > weapon[1]):
                     print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
-                    return None
+                    return init_new_game()
 
             # Validate skill_set format
             for skill, level in game_state["skill_set"].items():
                 if skill not in ["strength", "agility", "luck", "accuracy", "defence"]:
                     print(f"{style.RED} > Error loading file, Invalid skill: {skill}{style.RESET}")
-                    return None
+                    return init_new_game()
                 if not isinstance(level, int) or level < 0:
                     print(f"{style.RED} > Error loading file, Invalid level for skill {skill}{style.RESET}")
-                    return None
+                    return init_new_game()
 
             # Validate artifacts format
             if not all(isinstance(a, str) for a in game_state["artifacts"]):
                 print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
-                return None
+                return init_new_game()
             
             if not all(isinstance(a, str) for a in game_state["used_items"]):
                 print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
-                return None
+                return init_new_game()
 
             # Print loaded game state
             print(f"\n{style.GREEN}Game loaded from {file_name}{style.RESET}")
@@ -784,7 +784,7 @@ def random_encounter(game):
 
     elif i <= max(77, 99 - 2*game['level']):
         spinner(2, 0.1)
-        reward = r.randint(100, 200) + game['level'] * 10
+        reward = r.randint(0, 200) + game['level'] * 10
         game["gold"] += reward
 
         typewriter("You found a treasure chest!", style.YELLOW, post_delay=1)
