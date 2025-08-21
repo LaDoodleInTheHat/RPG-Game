@@ -1002,7 +1002,7 @@ def shop(game):
 
     typewriter(f"Gold : {game['gold']}", style.YELLOW)
     try:
-        choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (or 'exit' to leave) >>> {style.RESET}").strip())
+        choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy >>> {style.RESET}").strip())
     except ValueError:
         typewriter("Invalid input. Please enter a number.", style.RED)
         return game
@@ -1051,7 +1051,7 @@ def level_up_check(game):
 
         while True:
             
-            choice = input(f"\n{style.CYAN}Choose a skill to improve (or 'exit' to leave) >>> {style.RESET}").strip()
+            choice = input(f"\n{style.CYAN}Choose a skill to improve >>> {style.RESET}").strip()
 
             if choice in game["skill_set"]:
                 game["skill_set"][choice] += 1
