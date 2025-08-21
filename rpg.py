@@ -54,11 +54,11 @@ def init_new_game():
         "cheat_mode": False,
         "xp": 0,
         "skill_set": {
-            "strength": 1,
-            "agility": 1,
-            "luck": 1,
-            "accuracy": 1,
-            "defence": 1
+            "strength": 0,
+            "agility": 0,
+            "luck": 0,
+            "accuracy": 0,
+            "defence": 0
         },
         "used_items": []
     } if not os.path.exists('cheat') else {
@@ -75,11 +75,11 @@ def init_new_game():
         "cheat_mode": True,
         "xp": 0,
         "skill_set": {
-            "strength": 1,
-            "agility": 1,
-            "luck": 1,
-            "accuracy": 1,
-            "defence": 1
+            "strength": 0,
+            "agility": 0,
+            "luck": 0,
+            "accuracy": 0,
+            "defence": 0
         },
         "used_items": []
     }
@@ -168,7 +168,7 @@ def json_load():
                 if skill not in ["strength", "agility", "luck", "accuracy", "defence"]:
                     print(f"{style.RED} > Error loading file, Invalid skill: {skill}{style.RESET}")
                     return None
-                if not isinstance(level, int) or level < 1:
+                if not isinstance(level, int) or level < 0:
                     print(f"{style.RED} > Error loading file, Invalid level for skill {skill}{style.RESET}")
                     return None
 
