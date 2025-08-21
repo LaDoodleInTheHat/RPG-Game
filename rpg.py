@@ -867,6 +867,25 @@ def random_encounter(game):
         bsvc += 1
         return game
 
+def cozycoder():
+    global nsvc
+    ty = lambda x: typewriter(x, style.YELLOW, post_delay=1)
+    tg = lambda x: typewriter(x, style.GREEN, post_delay=1)
+    tb = lambda x: typewriter(x, style.BLUE, post_delay=1)
+    tr = lambda x: typewriter(x, style.RED, post_delay=1)
+
+    if nsvc == 0:
+        ty("...")
+        time.sleep(1)
+        ty("Hmm...")
+        time.sleep(1)
+        ty("Where to go...")
+        tg("Oh!")
+        tg("Hello adventurer!")
+        tg("What brings you here?")
+        spinner()
+
+
 # Equip a weapon from the arsenal
 def equip(game):
     print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
