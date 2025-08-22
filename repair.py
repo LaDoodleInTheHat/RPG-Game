@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import shutil
 
 def repair_save(file_name):
     if not os.path.exists(file_name):
@@ -115,23 +114,13 @@ def repair_save(file_name):
             log_fix("Autosave enabled flag invalid → reset to False")
             fixed["autosave"]["enabled"] = False
 
-    # --- Backup original ---
-    backup_name = f"{file_name}.bak"
-    shutil.copy(file_name, backup_name)
-    print(f"[BACKUP] Original file saved as {backup_name}")
-
     # --- Overwrite repaired ---
     with open(file_name, 'w') as f:
         json.dump(fixed, f, indent=4)
     print(f"[DONE] Repaired file written to {file_name}")
 
-    # --- Summary report ---
-    if fixes:
-        print("\n[SUMMARY OF FIXES]")
-        for fix in fixes:
-            print(" - " + fix)
-    else:
-        print("\n[SUMMARY] No fixes needed. File was already valid.")
+    if not fixes:
+        print("\nNo fixes needed. File was already valid.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
