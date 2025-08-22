@@ -5,9 +5,8 @@ Move onto additions.
 
 """
 
-import sys
-import time, random as r, os, json, math, string
-from collections import Counter as co
+import sys, time, random as r, os, json, math, string
+from dragon import animate
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -96,7 +95,7 @@ def init_new_game():
 
 # Save game state to JSON file
 def json_save(game, confirm=False, name=None):
-    file_name = name if name else input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
+    file_name = name if not name == None else input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
     file_name = file_name if file_name.endswith(".json") else file_name+".json"
 
     if file_name == '':
@@ -119,7 +118,9 @@ def json_save(game, confirm=False, name=None):
         try:
             with open(file_name, 'w')as f:
                 json.dump(game, f)
-            _ = print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}") if not confirm else None
+            if not confirm:
+                print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+
         except Exception as e:
             print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}") 
 
@@ -259,9 +260,9 @@ def lv_25_boss_fight(game):
         sys.stdout.flush()
         time.sleep(1/(s+1))
 
-    print('\n' + style.RESET)
+    os.system("cls")
 
-    sys.stdout.write("\r")  # go back to start
+    animate(2)
 
 # Check for game over or victory conditions
 def check_game_over(game):
@@ -405,7 +406,7 @@ def use_item(game):
     return game
 
 def LaDoodle_dialouge(game):
-    global nsvc, x, bsvc, y
+    global nsvc, x, bsvc, y, mi
     if bsvc == 0:
         typewriter("...", style.YELLOW, post_delay=1.5)
         typewriter("I see you're a traveler. What brings you here?", style.YELLOW, post_delay=1)
@@ -923,6 +924,7 @@ def random_encounter(game):
         bsvc += 1
         return game
 
+#Noah
 def cozycoder():
     global nsvc
     ty = lambda x: typewriter(x, style.YELLOW, post_delay=1)
@@ -1214,7 +1216,7 @@ def main():
                     "accuracy": 0,
                     "defence": 0
                 }
-                json_save(game, True, game["autosave"]["filename"])
+                json_save(game, True, game["autosave"]["filename"] if game["autosave"]["enabled"] else None)
                 typewriter("Your save file has been wiped, but you still have some stuff load your new save and see.", style.RED)
                 input("Press Enter to continue > ")
                 os.system('cls' if os.name == 'nt' else 'clear')
