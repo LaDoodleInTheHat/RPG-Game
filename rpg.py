@@ -5,7 +5,9 @@ Move onto additions.
 
 """
 
-import time, random as r, os, json, math
+import sys
+import time, random as r, os, json, math, string
+from collections import Counter as co
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -123,6 +125,11 @@ def typewriter(text, color=style.RESET, delay=0.02, post_delay=0.5):
 def json_load():
     file_name = input(f"{style.BLUE}{style.BOLD} Load file name >>>{style.RESET} ").strip() + ".json"
 
+    if not os.path.exists(file_name):
+        print(f"{style.RED} > File not found: {file_name}{style.RESET}")
+        time.sleep(2)
+        return init_new_game()
+
     try:
         with open(file_name, 'r') as f:
             game_state = json.load(f)
@@ -193,7 +200,46 @@ def json_load():
             return game_state
     except Exception as e:
         print(f"{style.RED} > Unable to read file with error: {e}{style.RESET}")
+        time.sleep(0.5)
+        print(f"{style.RED} > Proceeding to initiate new file...{style.RESET}")
+
         time.sleep(2)
+
+        return init_new_game()
+
+def lv_25_boss_fight(game):
+    os.system("cls" if os.name == "nt" else "clear")
+
+    line = "-"*35
+    line2 = "="*35
+
+    # First red slow animation
+    sys.stdout.write(style.RED + style.BOLD)
+    for char in line:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(0.5)
+
+    # Overwrite with green fast animation
+    sys.stdout.write("\r")  # go back to start
+    sys.stdout.write(style.GREEN + style.BOLD)
+    for char in line2:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(0.05)
+
+
+    sys.stdout.write("\r")  # go back to start
+    sys.stdout.write(style.GREEN + style.BOLD)
+
+    for s in range(10000):
+        sys.stdout.write(str(r.randint(0,1)))
+        sys.stdout.flush()
+        time.sleep(1/(s+1))
+
+    print('\n' + style.RESET)
+
+    sys.stdout.write("\r")  # go back to start
 
 # Check for game over or victory conditions
 def check_game_over(game):
@@ -207,8 +253,7 @@ def check_game_over(game):
             print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
             return True
     elif game["level"] == 25:
-        print(f"\n{style.BOLD}{style.UNDERLINE}{style.GREEN}CONGRATS!{style.RESET} {style.GREEN}You just won the game and earned {style.BOLD}{style.MAGENTA}Drago's Egg{style.RESET}")
-        game["artifacts"].append("Drago's Egg")
+        game = lv_25_boss_fight(game)
         return True
     else:
         return False
@@ -216,21 +261,29 @@ def check_game_over(game):
 # To use an item
 def use_item(game):
     global mi
+
+    #m e not code dis bit
     if game['inventory']:
-        for idx, item in enumerate(game["inventory"], start=1):
-            print(f" {idx}. {item}")
+        # Count items manually
+        item_counts = {}
+        for item in game["inventory"]:
+            item_counts[item] = item_counts.get(item, 0) + 1
+
+        # Display them with x(num)
+        items_list = list(item_counts.keys())
+        for idx, item in enumerate(items_list, start=1):
+            print(f" {idx}. {item} x{item_counts[item]}")
 
         choice = int(input("Pick an item to use (#) >>> ")) - 1
-        if 0 <= choice < len(game["inventory"]):
-            item = game["inventory"][choice]
-            
+        if 0 <= choice < len(items_list):
+            item = items_list[choice]
+
             if item == "Small Health Potion":
                 game["hp"] += 20
                 game["hp"] = min(game["hp"], game["max_hp"])
                 typewriter(f"You used {item}!", style.GREEN)
                 typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
                 game["inventory"].remove(item)
-
 
             elif item == "Wooden Shield":
                 game['skill_set']["defence"] += 0.2
@@ -308,7 +361,6 @@ def use_item(game):
                 for w in game["weapons"]:
                     w[1] += 50
                     w[2] += 50
-
                     new_weapons.append(w)
 
                 game["weapons"] = new_weapons
@@ -319,14 +371,15 @@ def use_item(game):
                 typewriter("Your new stats are: ", style.GREEN)
                 typewriter(f"HP: {game['hp']}/{game['max_hp']}", style.GREEN)
                 for w in game["weapons"]:
-                    typewriter(f" - {w[0]}: {w[1]}-{w[2()]}", style.GREEN, delay=0.01)
+                    typewriter(f" - {w[0]}: {w[1]}-{w[2]}", style.GREEN, delay=0.01)
                 game["inventory"].remove(item)
                 game["used_items"].append(item)
+
         else:
             typewriter("Invalid choice.", style.RED)
     else:
         typewriter("You don't have anything to use!", style.RED)
-    
+
     return game
 
 def LaDoodle_dialouge(game):
@@ -870,7 +923,6 @@ def cozycoder():
         tg("What brings you here?")
         spinner()
 
-
 # Equip a weapon from the arsenal
 def equip(game):
     print(f"\n{style.BLUE}Which weapon would you like to equip?{style.RESET}")
@@ -1003,14 +1055,16 @@ def shop(game):
                 typewriter(f"You do not have enough gold to purchase {weapon[0]}.", style.RED)
         else:
             item = current_items[int(choice) - 1]
-            if game["gold"] >= item[1]:
-                game["gold"] -= item[1]
-                game["inventory"].append(item[0])
-                typewriter(f"You have purchased {item[0]}!", style.GREEN)
+
+            count = int(input(" How many would you like to purchase? (0 for none) >>> ").strip())
+
+            if game["gold"] >= item[1] * count:
+                game["gold"] -= item[1] * count
+                for _ in range(count):
+                    game["inventory"].append(item[0])
+                typewriter(f"You have purchased {count} {item[0]}(s)!", style.GREEN)
             else:
-                typewriter(f"You do not have enough gold to purchase {item[0]}.", style.RED)
-    elif choice.lower() == "exit":
-        typewriter("Exiting shop...", style.YELLOW)
+                typewriter(f"You do not have enough gold to purchase {count} {item[0]}(s).", style.RED)
     else:
         typewriter("Invalid choice. Please try again.", style.RED)
 
@@ -1024,28 +1078,30 @@ def level_up_check(game):
         game["max_hp"] += round(game["max_hp"] * 0.2)
         game["hp"] = game["max_hp"]
         print()
-        typewriter(f"Congratulations! You leveled up to level {game['level']}!", style.GREEN)
-        typewriter(f"Your experience is {game['xp']}!", style.GREEN)
-        typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN)
-        typewriter(f"You have also regened to max hp", style.GREEN)
-        
+        typewriter(f"Congratulations! You leveled up to level {game['level']}!", style.GREEN, delay=0.005)
+        typewriter(f"Your maximum HP has increased to {game['max_hp']}!", style.GREEN, delay=0.005)
+        typewriter(f"You have also regened to max hp", style.GREEN, delay=0.005)
+
         print()
-        for skill, level in game['skill_set'].items():
-            print(f"{style.YELLOW}{skill.capitalize()}: {level}{style.RESET}")
+        stats = [(typ, lvl) for typ, lvl in game['skill_set'].items()]
+
+        for idx, (skill, level) in enumerate(stats, start=1):
+            print(f"{style.YELLOW}{idx}. {skill.capitalize()}: {level}{style.RESET}")
             time.sleep(0.1)
 
+        
         while True:
-            
-            choice = input(f"\n{style.CYAN}Choose a skill to improve >>> {style.RESET}").strip()
-
-            if choice in game["skill_set"]:
-                game["skill_set"][choice] += 1
-                typewriter(f"You have improved your {choice} skill!", style.GREEN)
-                break
-            else:
-                typewriter(f" > Invalid skill choice, Make sure you type it perfectly", style.RED)
-
-        time.sleep(1)
+            try:
+                choice = int(input(f"\n{style.CYAN}Choose a skill to improve (#) >>> {style.RESET}").strip())
+                if 1 <= choice <= len(stats):
+                    stat = stats[choice - 1]
+                    game['skill_set'][stats[choice - 1][0]] += 1
+                    typewriter(f"Your {stat[0]} has been improved!", style.GREEN)
+                else:
+                    print(f"{style.RED}Invalid choice. Please try again.{style.RESET}")
+            except Exception as e:
+                print(f"{style.RED}Invalid input. Please enter a number.{style.RESET}")
+                continue
 
     return game
 
@@ -1053,8 +1109,10 @@ def level_up_check(game):
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-    print(f"\n{style.MAGENTA}Welcome to DOODLE R.P.G.\n")
-    i = input(f"{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
+    typewriter("Welcome to DOODLE R.P.G.", style.MAGENTA)
+    print()
+    typewriter("DOODLE R.P.G. is a game where you can explore the world, fight monsters, and level up your character.\nYou will encounter monsters and enemies, explore and piece together the mysterious lore behind all of the fighting.\nYou Enter the command in the command line, and h is for help on commands, when you win, you will encounter a suprise.\nYou can save and load via a json file which you can name. you can overwrite existing files and load your save.\nThank you for considering DOODLE R.P.G. AND ENJOY!", delay=0.005)
+    i = input(f"\n{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
     game = json_load() if i == "Y" else init_new_game()
 
