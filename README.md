@@ -13,6 +13,7 @@ You use a command line to explore somewhere, and level up, here are the commands
  - load - load from existing save file
  - help (or h) - list all commands
  - quit (or q) to prompt save and exit
+ - autosave (or a) to toggle autosave
 
 Try it by running `initiate.bat`
 

@@ -62,7 +62,11 @@ def init_new_game():
             "accuracy": 0,
             "defence": 0
         },
-        "used_items": []
+        "used_items": [],
+        "autosave": {
+            "filename": str,
+            "enabled": False,
+        }
     } if not os.path.exists('cheat') else {
         "level": 1,
         "hp": 9999,
@@ -83,12 +87,16 @@ def init_new_game():
             "accuracy": 0,
             "defence": 0
         },
-        "used_items": []
+        "used_items": [],
+        "autosave": {
+            "filename": str,
+            "enabled": False,
+        }
     }
 
 # Save game state to JSON file
-def json_save(game):
-    file_name = input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
+def json_save(game, confirm=False, name=None):
+    file_name = name if name else input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
     file_name = file_name if file_name.endswith(".json") else file_name+".json"
 
     if file_name == '':
@@ -96,7 +104,9 @@ def json_save(game):
         json_save(game)
         return
     elif os.path.exists(file_name):
-        if input(" Are you sure you want to overwrite this file? (y/n) >>> ").strip().lower() == 'y':
+        n = input(" Are you sure you want to overwrite this file? (y/n) >>> ").strip().lower() if not confirm else 'y'
+
+        if n == 'y':
             try:
                 with open(file_name, 'w')as f:
                     json.dump(game, f)
@@ -146,7 +156,8 @@ def json_load():
                 "cheat_mode": bool,
                 "xp": int,
                 "skill_set": dict,
-                "used_items": list
+                "used_items": list,
+                "autosave": dict
             }
 
             # Validate required keys and types
@@ -187,6 +198,17 @@ def json_load():
             if not all(isinstance(a, str) for a in game_state["used_items"]):
                 print(f"{style.RED} > Error loading file, Invalid format{style.RESET}")
                 return init_new_game()
+
+            for key, value in game_state["autosave"].items():
+                if key not in ["filename", "enabled"]:
+                    print(f"{style.RED} > Error loading file, Invalid autosave key: {key}{style.RESET}")
+                    return init_new_game()
+                if key == "enabled" and not isinstance(value, bool):
+                    print(f"{style.RED} > Error loading file, Invalid type for autosave key {key}{style.RESET}")
+                    return init_new_game()
+                if key == "filename" and not isinstance(value, str) and not value.endswith(".json"):
+                    print(f"{style.RED} > Error loading file, Invalid type for autosave key {key}{style.RESET}")
+                    return init_new_game()
 
             # Print loaded game state
             print(f"\n{style.GREEN}Game loaded from {file_name}{style.RESET}")
@@ -1035,34 +1057,35 @@ def shop(game):
 
     typewriter(f"Gold : {game['gold']}", style.YELLOW)
     try:
-        choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy >>> {style.RESET}").strip())
+        choice = int(input(f"{style.CYAN}Enter the number of the item you want to buy (#) >>> {style.RESET}").strip())
+
+        if 1 <= int(choice) <= len(current_items) + 1:
+            if items[choice - 1][0] in weapon_stats:
+                weapon = weapon_stats[items[choice - 1][0]]
+                if game["gold"] >= items[choice - 1][1]:
+                    game["gold"] -= items[choice - 1][1]
+                    game["weapons"].append(weapon)
+                    typewriter(f"You have purchased {weapon[0]}!", style.GREEN)
+                else:
+                    typewriter(f"You do not have enough gold to purchase {weapon[0]}.", style.RED)
+            else:
+                item = current_items[int(choice) - 1]
+
+                count = int(input(" How many would you like to purchase? (0 for none) >>> ").strip())
+
+                if game["gold"] >= item[1] * count:
+                    game["gold"] -= item[1] * count
+                    for _ in range(count):
+                        game["inventory"].append(item[0])
+                    typewriter(f"You have purchased {count} {item[0]}(s)!", style.GREEN)
+                else:
+                    typewriter(f"You do not have enough gold to purchase {count} {item[0]}(s).", style.RED)
+        else:
+            typewriter("Invalid choice. Please try again.", style.RED)
     except ValueError:
         typewriter("Invalid input. Please enter a number.", style.RED)
-        return game
 
-    if 1 <= int(choice) <= len(current_items) + 1:
-        if items[choice - 1][0] in weapon_stats:
-            weapon = weapon_stats[items[choice - 1][0]]
-            if game["gold"] >= items[choice - 1][1]:
-                game["gold"] -= items[choice - 1][1]
-                game["weapons"].append(weapon)
-                typewriter(f"You have purchased {weapon[0]}!", style.GREEN)
-            else:
-                typewriter(f"You do not have enough gold to purchase {weapon[0]}.", style.RED)
-        else:
-            item = current_items[int(choice) - 1]
-
-            count = int(input(" How many would you like to purchase? (0 for none) >>> ").strip())
-
-            if game["gold"] >= item[1] * count:
-                game["gold"] -= item[1] * count
-                for _ in range(count):
-                    game["inventory"].append(item[0])
-                typewriter(f"You have purchased {count} {item[0]}(s)!", style.GREEN)
-            else:
-                typewriter(f"You do not have enough gold to purchase {count} {item[0]}(s).", style.RED)
-    else:
-        typewriter("Invalid choice. Please try again.", style.RED)
+    
 
     return game
 
@@ -1111,11 +1134,14 @@ def main():
     i = input(f"\n{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
     game = json_load() if i == "Y" else init_new_game()
-
+    if not game['autosave']['enabled']:
+        game['autosave']['enabled'] = True if input(f"{style.CYAN}Would you like to enable autosave? ({style.RESET}{style.CYAN}Y{style.RESET}/{style.CYAN}N{style.RESET}) >>> {style.RESET}").strip().upper() == "Y" else False
+        game['autosave']['filename'] = input(f"{style.CYAN}Enter a filename for autosave: {style.RESET}").strip() if game['autosave']['enabled'] else None
     time.sleep(2)
 
     while True:
         try:
+            backup_game = game
             os.system('cls' if os.name == 'nt' else 'clear')
 
             s = input(f"{style.BOLD}{style.BLUE}Enter Command (h for help) >>>{style.RESET} ")
@@ -1131,6 +1157,7 @@ def main():
         load - load from existing save file
         help (or h) - list all commands
         quit (or q) to prompt save and exit
+        autosave (or a) - toggle autosave on/off
         {style.RESET}""")
             elif s in ["quit", "q"]:
                 quit_game(game)
@@ -1162,10 +1189,31 @@ def main():
                 game = use_item(game)
             elif s in ["equip", "eq"]:
                 game = equip(game)
+            elif s in ["autosave", "a"]:
+                game["autosave"]["enabled"] = not game["autosave"]["enabled"]
+                print(f"{style.YELLOW} > Autosave {'enabled' if game['autosave']['enabled'] else 'disabled'}{style.RESET}")
             else:
                 print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
+            if game['autosave']['enabled']:
+                json_save(game, True, game["autosave"]["filename"])
+
             if check_game_over(game):
+                game['hp'] = 1
+                game['level'] = game['level'] // 2
+                game['xp'] = 0
+                game['gold'] = game['gold'] // 10
+                game['inventory'] = []
+                game['used_items'] = []
+                game['skill_set'] = {
+                    "strength": 0,
+                    "agility": 0,
+                    "luck": 0,
+                    "accuracy": 0,
+                    "defence": 0
+                }
+                json_save(game, True, game["autosave"]["filename"])
+                typewriter("Your save file has been wiped, but you still have some stuff load your new save and see.", style.RED)
                 input("Press Enter to continue > ")
                 os.system('cls' if os.name == 'nt' else 'clear')
                 if input(f"{style.YELLOW} Would you like to restart ? (Y/N) >>> {style.RESET}").strip().upper() == "Y":
@@ -1174,7 +1222,9 @@ def main():
                     return
                 
             game = level_up_check(game)
-
+            if game == None:
+                typewriter("An error has occurred during the process, Don't panic, resorting to backup save.", style.RED)
+                game = backup_game
             input("Press Enter to continue > ")
         except KeyboardInterrupt:
             print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
