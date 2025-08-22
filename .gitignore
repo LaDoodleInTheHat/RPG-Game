@@ -6,8 +6,5 @@ test.py
 *.spec
 dist/
 build/
-*.md
-*.png
-*.ico
-*.bak
+script.md
 *.zip
