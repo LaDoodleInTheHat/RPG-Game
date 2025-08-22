@@ -1116,13 +1116,15 @@ def level_up_check(game):
                     stat = stats[choice - 1]
                     game['skill_set'][stats[choice - 1][0]] += 1
                     typewriter(f"Your {stat[0]} has been improved!", style.GREEN)
-                    return game
+                    break
 
                 else:
                     print(f"{style.RED}Invalid choice. Please try again.{style.RESET}")
             except Exception as e:
                 print(f"{style.RED}Invalid input. Please enter a number.{style.RESET}")
                 continue
+
+    return game
 
 # Main game loop
 def main():
