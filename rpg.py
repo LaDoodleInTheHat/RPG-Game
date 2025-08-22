@@ -119,7 +119,7 @@ def json_save(game, confirm=False, name=None):
         try:
             with open(file_name, 'w')as f:
                 json.dump(game, f)
-            print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+            _ = print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}") if not confirm else None
         except Exception as e:
             print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}") 
 
