@@ -736,12 +736,8 @@ def random_encounter(game):
     ]
 
     # Adjust monster chances based on level
-    
-    try:
-        i = r.randint(0, 100) if not game['cheat_mode'] else int(input("Monster : (0-79), Treasure : (80-99), Shopkeeper : (100) >>> "))
-    except Exception as e:
-        typewriter("Invalid input! Defaulting to normal encounter.", style.RED)
-        i = r.randint(0, 100)
+
+    i = r.randint(0, 100)
 
     if i <= max(43, 89 - 2*game['level']):
         # Monster fight
