@@ -6,7 +6,7 @@ Move onto additions.
 """
 
 import sys, time, random as r, os, json, math, string
-from dragon import animate
+from dragon import animate_emerge_from_binary, animate_dodge_sword, animate_dodge_and_counter_sword, animate_fumble_fire, animate_get_hit_by_sword, animate_hit
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -262,7 +262,7 @@ def lv_25_boss_fight(game):
 
     os.system("cls")
 
-    animate(2)
+    animate_emerge_from_binary()
 
 # Check for game over or victory conditions
 def check_game_over(game):
