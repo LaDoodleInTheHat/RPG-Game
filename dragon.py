@@ -612,3 +612,11 @@ def animate_fumble_fire():
     time.sleep(1.5)
 
     sys.stdout.write(SHOW_CURSOR)
+
+def animate_all():
+    animate_emerge_from_binary()
+    animate_dodge_sword()
+    animate_dodge_and_counter_sword()
+    animate_fumble_fire()
+    animate_get_hit_by_sword()
+    animate_hit(1)
