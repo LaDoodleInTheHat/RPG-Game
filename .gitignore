@@ -1,11 +1,9 @@
 .venv/
 cheat
 test.py
-*.json
-*.txt
 *.spec
 dist/
 build/
-script.md
-*.zip
 __pycache__/
+saves/
+zipver/
