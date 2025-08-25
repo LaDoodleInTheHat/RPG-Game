@@ -94,8 +94,8 @@ def init_new_game():
     }
 
 # Save game state to JSON file
-def json_save(game, confirm=False, name=None):
-    file_name = name if not name == None else input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
+def json_save(game):
+    file_name = game["autosave"]["filename"] if game["autosave"]["enabled"] else input(f"{style.BLUE}{style.BOLD}Save filename >>>{style.RESET} ").strip()
     file_name = file_name if file_name.endswith(".json") else file_name+".json"
 
     if file_name == '':
@@ -103,13 +103,12 @@ def json_save(game, confirm=False, name=None):
         json_save(game)
         return
     elif os.path.exists(file_name):
-        n = input(" Are you sure you want to overwrite this file? (y/n) >>> ").strip().lower() if not confirm else 'y'
+        n = input(" Are you sure you want to overwrite this file? (y/n) >>> ").strip().lower() if not game else 'y'
 
         if n == 'y':
             try:
-                with open(file_name, 'w')as f:
-                    json.dump(game, f)
-                print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+                with open(file_name, 'w')as f: json.dump(game, f)
+                _ = print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}") if not game["autosave"]["enabled"] else None
             except Exception as e:
                 print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}")
         else:
@@ -118,8 +117,8 @@ def json_save(game, confirm=False, name=None):
         try:
             with open(file_name, 'w')as f:
                 json.dump(game, f)
-            if not confirm:
-                print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}")
+
+            _ = print(f"\n{style.GREEN}Game saved to {file_name}{style.RESET}") if not game["autosave"]["enabled"] else None
 
         except Exception as e:
             print(f"{style.RED} > Unable to write file with error: {e}{style.RESET}") 
@@ -1135,12 +1134,11 @@ def main():
     typewriter("Welcome to DOODLE R.P.G.", style.MAGENTA)
     print()
     typewriter("DOODLE R.P.G. is a game where you can explore the world, fight monsters, and level up your character.\nYou will encounter monsters and enemies, explore and piece together the mysterious lore behind all of the fighting.\nYou Enter the command in the command line, and h is for help on commands, when you win, you will encounter a suprise.\nYou can save and load via a json file which you can name. you can overwrite existing files and load your save.\nThank you for considering DOODLE R.P.G. AND ENJOY!", delay=0.005)
-    i = input(f"\n{style.CYAN}{style.BOLD} Would you like to load a game from json file? ({style.RESET}{style.CYAN}Y{style.BOLD}/{style.RESET}{style.CYAN}N{style.BOLD}) >>> {style.RESET}").strip().upper()
 
-    game = json_load() if i == "Y" else init_new_game()
+    game = json_load() if input(f"\n{style.CYAN} Would you like to load a game from json file? (Y/N) >>>{style.RESET} ").strip().upper() == "Y" else init_new_game()
     if not game['autosave']['enabled']:
-        game['autosave']['enabled'] = True if input(f"{style.CYAN}Would you like to enable autosave? ({style.RESET}{style.CYAN}Y{style.RESET}/{style.CYAN}N{style.RESET}) >>> {style.RESET}").strip().upper() == "Y" else False
-        game['autosave']['filename'] = input(f"{style.CYAN}Enter a filename for autosave: {style.RESET}").strip() if game['autosave']['enabled'] else None
+        game['autosave']['enabled'] = True if input(f"{style.CYAN} Would you like to enable autosave? (Y/N) >>> {style.RESET}").strip().upper() == "Y" else False
+        game['autosave']['filename'] = input(f"{style.CYAN} Enter a filename for autosave >>> {style.RESET}").strip() if game['autosave']['enabled'] else None
     time.sleep(2)
 
     while True:
@@ -1199,25 +1197,25 @@ def main():
             else:
                 print(f"{style.RED} > Invalid command, type help (or h) to list possible commands{style.RESET}")
 
-            if game['autosave']['enabled']:
-                json_save(game, True, game["autosave"]["filename"])
+            if game['autosave']['enabled']: json_save(game)
 
             if check_game_over(game):
-                game['hp'] = 1
-                game['level'] = game['level'] // 2
-                game['xp'] = 0
-                game['gold'] = game['gold'] // 10
-                game['inventory'] = []
-                game['used_items'] = []
-                game['skill_set'] = {
-                    "strength": 0,
-                    "agility": 0,
-                    "luck": 0,
-                    "accuracy": 0,
-                    "defence": 0
-                }
-                json_save(game, True, game["autosave"]["filename"] if game["autosave"]["enabled"] else None)
-                typewriter("Your save file has been wiped, but you still have some stuff load your new save and see.", style.RED)
+                if game["autosave"]["enabled"]:
+                    game['hp'] = 1
+                    game['level'] = game['level'] // 2
+                    game['xp'] = 0
+                    game['gold'] = game['gold'] // 10
+                    game['inventory'] = []
+                    game['used_items'] = []
+                    game['skill_set'] = {
+                        "strength": 0,
+                        "agility": 0,
+                        "luck": 0,
+                        "accuracy": 0,
+                        "defence": 0
+                    }
+                    json_save(game)
+                    typewriter("Your save file has been wiped, but you still have some stuff load your new save and see.", style.RED)
                 input("Press Enter to continue > ")
                 os.system('cls' if os.name == 'nt' else 'clear')
                 if input(f"{style.YELLOW} Would you like to restart ? (Y/N) >>> {style.RESET}").strip().upper() == "Y":
