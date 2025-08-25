@@ -263,6 +263,40 @@ def lv_25_boss_fight(game):
 
     animate_emerge_from_binary()
 
+    drago = {
+        "name": "Drago the Eternal",
+        "hp": 2500,
+        "max_hp": 2500,
+        "moves": [
+            ["Flame Breath", 500, 1000],
+            ["Tail Swipe", 750, 1200],
+            ["Wing Attack", 900, 1300],
+            ["Heal", -500, 0]
+        ],
+    }
+
+    while drago["hp"] > 0 and game["hp"] > 0:
+        action = input("What would you like to do? (attack, defend, use item, parry, counter) >>> ")
+
+        
+
+        if action == "attack":
+            # Implement attack logic
+            pass
+        elif action == "parry":
+            # Implement parry logic
+            pass
+        elif action == "counter":
+            # Implement counter logic
+            pass
+        elif action == "defend":
+            # Implement defend logic
+            pass
+        elif action == "use item":
+            game = use_item(game)
+        else:
+            print("Invalid action. Please choose again.")
+
 # Check for game over or victory conditions
 def check_game_over(game):
     if game["hp"] <= 0:
@@ -281,7 +315,7 @@ def check_game_over(game):
         return False
 
 # To use an item
-def use_item(game):
+def use_item(game, battle=True):
     global mi
 
     #m e not code dis bit
@@ -297,105 +331,107 @@ def use_item(game):
             print(f" {idx}. {item} x{item_counts[item]}")
 
         choice = int(input("Pick an item to use (#) >>> ")) - 1
-        if 0 <= choice < len(items_list):
-            item = items_list[choice]
+        count = 1 if battle else int(input("How many would you like to use? >>> "))
+        for _ in range(count):
+            if 0 <= choice < len(items_list):
+                item = items_list[choice]
 
-            if item == "Small Health Potion":
-                game["hp"] += 20
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                if item == "Small Health Potion":
+                    game["hp"] += 20
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Wooden Shield":
-                game['skill_set']["defence"] += 0.2
-                typewriter(f"You equipped {item}!", style.GREEN)
-                typewriter(f"Your defence is now {game['skill_set']['defence']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Wooden Shield":
+                    game['skill_set']["defence"] += 0.2
+                    typewriter(f"You equipped {item}!", style.GREEN)
+                    typewriter(f"Your defence is now {game['skill_set']['defence']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Medium Health Potion":
-                game["hp"] += 50
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Medium Health Potion":
+                    game["hp"] += 50
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Large Health Potion":
-                game["hp"] += 90
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Large Health Potion":
+                    game["hp"] += 90
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Beginner's Scroll":
-                spells = [["Flare Dash", 80, 120], ["Icicle Barrage", 100, 150], ["Earth Shatter", 120, 180]]
-                spell = r.choice(spells, weights=[50, 35, 15])
-                typewriter(f"You learned a new spell: {spell[0]}!", style.GREEN)
-                game["spells"].append(spell)
-                game["inventory"].remove(item)
-                typewriter(f"The Scroll was used up", style.YELLOW)
+                elif item == "Beginner's Scroll":
+                    spells = [["Flare Dash", 80, 120], ["Icicle Barrage", 100, 150], ["Earth Shatter", 120, 180]]
+                    spell = r.choice(spells, weights=[50, 35, 15])
+                    typewriter(f"You learned a new spell: {spell[0]}!", style.GREEN)
+                    game["spells"].append(spell)
+                    game["inventory"].remove(item)
+                    typewriter(f"The Scroll was used up", style.YELLOW)
 
-            elif item == "Assassin's Cloak" and not "Assassin's Cloak" in game['used_items']:
-                game['skill_set']['agility'] += 5
-                game['skill_set']['accuracy'] += 5
+                elif item == "Assassin's Cloak" and not "Assassin's Cloak" in game['used_items']:
+                    game['skill_set']['agility'] += 5
+                    game['skill_set']['accuracy'] += 5
 
-                typewriter(f"You equipped {item}!", style.GREEN)
-                typewriter(f"Your stats are now {game['skill_set']}.", style.GREEN)
-                game["inventory"].remove(item)
-                game['used_items'].append(item)
+                    typewriter(f"You equipped {item}!", style.GREEN)
+                    typewriter(f"Your stats are now {game['skill_set']}.", style.GREEN)
+                    game["inventory"].remove(item)
+                    game['used_items'].append(item)
 
-            elif item == "Elite Health Potion":
-                game["hp"] += 150
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Elite Health Potion":
+                    game["hp"] += 150
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Secret Map":
-                if not mi:
-                    typewriter("You don't seem to know how to use this item!", style.RED)
+                elif item == "Secret Map":
+                    if not mi:
+                        typewriter("You don't seem to know how to use this item!", style.RED)
 
-            elif item == "Assassin Build Scroll" and "Assassin's Cloak" in game['used_items'] and not "Assassin's Build Scroll" in game['used_items']:
-                game["weapons"].append(["Assassin's Dagger", 100, 200])
-                game["skill_set"]["agility"] += 5
-                game["skill_set"]["accuracy"] += 5
-                game["used_items"].append(item)
-                typewriter("You have successfully created the Assassin Build!", style.GREEN)
-                typewriter(f"Your new weapon is: {game['weapons'][-1][0]}")
-                typewriter(f"Your new stats are: {game['skill_set']}")
+                elif item == "Assassin Build Scroll" and "Assassin's Cloak" in game['used_items'] and not "Assassin's Build Scroll" in game['used_items']:
+                    game["weapons"].append(["Assassin's Dagger", 100, 200])
+                    game["skill_set"]["agility"] += 5
+                    game["skill_set"]["accuracy"] += 5
+                    game["used_items"].append(item)
+                    typewriter("You have successfully created the Assassin Build!", style.GREEN)
+                    typewriter(f"Your new weapon is: {game['weapons'][-1][0]}")
+                    typewriter(f"Your new stats are: {game['skill_set']}")
 
-            elif item == "Legendary Health Potion":
-                game["hp"] += 200
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Legendary Health Potion":
+                    game["hp"] += 200
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Divine Health Potion":
-                game["hp"] += 300
-                game["hp"] = min(game["hp"], game["max_hp"])
-                typewriter(f"You used {item}!", style.GREEN)
-                typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
-                game["inventory"].remove(item)
+                elif item == "Divine Health Potion":
+                    game["hp"] += 300
+                    game["hp"] = min(game["hp"], game["max_hp"])
+                    typewriter(f"You used {item}!", style.GREEN)
+                    typewriter(f"Your HP is now {game['hp']}.", style.GREEN)
+                    game["inventory"].remove(item)
 
-            elif item == "Mystic Cloak" and not "Mystic Cloak" in game['used_items']:
-                new_weapons = []
-                for w in game["weapons"]:
-                    w[1] += 50
-                    w[2] += 50
-                    new_weapons.append(w)
+                elif item == "Mystic Cloak" and not "Mystic Cloak" in game['used_items']:
+                    new_weapons = []
+                    for w in game["weapons"]:
+                        w[1] += 50
+                        w[2] += 50
+                        new_weapons.append(w)
 
-                game["weapons"] = new_weapons
-                game["max_hp"] += 50
-                game["hp"] = game["max_hp"]
+                    game["weapons"] = new_weapons
+                    game["max_hp"] += 50
+                    game["hp"] = game["max_hp"]
 
-                typewriter("You have used the Mystic Cloak and buffed all your weapons by 50 dmg and your HP, also regenerated to max.", style.GREEN)
-                typewriter("Your new stats are: ", style.GREEN)
-                typewriter(f"HP: {game['hp']}/{game['max_hp']}", style.GREEN)
-                for w in game["weapons"]:
-                    typewriter(f" - {w[0]}: {w[1]}-{w[2]}", style.GREEN, delay=0.01)
-                game["inventory"].remove(item)
-                game["used_items"].append(item)
+                    typewriter("You have used the Mystic Cloak and buffed all your weapons by 50 dmg and your HP, also regenerated to max.", style.GREEN)
+                    typewriter("Your new stats are: ", style.GREEN)
+                    typewriter(f"HP: {game['hp']}/{game['max_hp']}", style.GREEN)
+                    for w in game["weapons"]:
+                        typewriter(f" - {w[0]}: {w[1]}-{w[2]}", style.GREEN, delay=0.01)
+                    game["inventory"].remove(item)
+                    game["used_items"].append(item)
 
         else:
             typewriter("Invalid choice.", style.RED)
@@ -775,7 +811,7 @@ def random_encounter(game):
 
                 # Battle loop
                 while monster[1] > 0 and game["hp"] > 0:
-                    qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/useItem) >>> {style.RESET}")
+                    qu = input(f"\n{style.BOLD}What would you like to do (run/attack/counter/use item) >>> {style.RESET}").strip().lower()
                     print()
                     dmg = r.randint(player_weapon[1] + 5*game['skill_set']['strength'], player_weapon[2] + 5*game['skill_set']['strength'])
                     mdmg = round(r.randint(int(monster[2]*0.7), monster[2]) - 5*game['skill_set']['defence'])
@@ -819,7 +855,7 @@ def random_encounter(game):
                                     typewriter(f"{monster[0]} strikes you for {mdmg} damage!", style.RED)
                                 else:
                                     typewriter("The monster's attack missed!", style.GREEN)
-                    elif qu == "useItem":
+                    elif qu == "use item":
                         
                         game = use_item(game)
 
@@ -1188,7 +1224,7 @@ def main():
             elif s in ["shop", "sh"]:
                 game = shop(game)
             elif s in ["use", "u"]:
-                game = use_item(game)
+                game = use_item(game, False)
             elif s in ["equip", "eq"]:
                 game = equip(game)
             elif s in ["autosave", "a"]:
