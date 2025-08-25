@@ -123,7 +123,4 @@ def repair_save(file_name):
         print("\nNo fixes needed. File was already valid.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python repair.py <filename.json>")
-    else:
-        repair_save(sys.argv[1])
+    repair_save(input("Enter the path to the save file (on file, ctr+shift+c to copy path) >>> "))

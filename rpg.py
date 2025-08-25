@@ -6,7 +6,7 @@ Move onto additions.
 """
 
 import sys, time, random as r, os, json, math, string
-from dragon import animate_emerge_from_binary, animate_dodge_sword, animate_dodge_and_counter_sword, animate_fumble_fire, animate_get_hit_by_sword, animate_hit
+from bossfights import lv_25_boss_fight
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -206,7 +206,7 @@ def json_load():
                 if key == "enabled" and not isinstance(value, bool):
                     print(f"{style.RED} > Error loading file, Invalid type for autosave key {key}{style.RESET}")
                     return init_new_game()
-                if key == "filename" and not isinstance(value, str) and not value.endswith(".json"):
+                if key == "filename" and (not isinstance(value, str) and value):
                     print(f"{style.RED} > Error loading file, Invalid type for autosave key {key}{style.RESET}")
                     return init_new_game()
 
@@ -229,74 +229,6 @@ def json_load():
 
         return init_new_game()
 
-def lv_25_boss_fight(game):
-    os.system("cls" if os.name == "nt" else "clear")
-
-    line = "-"*35
-    line2 = "="*35
-
-    # First red slow animation
-    sys.stdout.write(style.RED + style.BOLD)
-    for char in line:
-        sys.stdout.write(char)
-        sys.stdout.flush()
-        time.sleep(0.5)
-
-    # Overwrite with green fast animation
-    sys.stdout.write("\r")  # go back to start
-    sys.stdout.write(style.GREEN + style.BOLD)
-    for char in line2:
-        sys.stdout.write(char)
-        sys.stdout.flush()
-        time.sleep(0.05)
-
-
-    sys.stdout.write("\r")  # go back to start
-    sys.stdout.write(style.GREEN + style.BOLD)
-
-    for s in range(10000):
-        sys.stdout.write(str(r.randint(0,1)))
-        sys.stdout.flush()
-        time.sleep(1/(s+1))
-
-    os.system("cls")
-
-    animate_emerge_from_binary()
-
-    drago = {
-        "name": "Drago the Eternal",
-        "hp": 2500,
-        "max_hp": 2500,
-        "moves": [
-            ["Flame Breath", 500, 1000],
-            ["Tail Swipe", 750, 1200],
-            ["Wing Attack", 900, 1300],
-            ["Heal", -500, 0]
-        ],
-    }
-
-    while drago["hp"] > 0 and game["hp"] > 0:
-        action = input("What would you like to do? (attack, defend, use item, parry, counter) >>> ")
-
-        
-
-        if action == "attack":
-            # Implement attack logic
-            pass
-        elif action == "parry":
-            # Implement parry logic
-            pass
-        elif action == "counter":
-            # Implement counter logic
-            pass
-        elif action == "defend":
-            # Implement defend logic
-            pass
-        elif action == "use item":
-            game = use_item(game)
-        else:
-            print("Invalid action. Please choose again.")
-
 # Check for game over or victory conditions
 def check_game_over(game):
     if game["hp"] <= 0:
@@ -309,7 +241,7 @@ def check_game_over(game):
             print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
             return True
     elif game["level"] == 25:
-        game = lv_25_boss_fight(game)
+        game = lv_25_boss_fight(game, lambda b: use_item(b))
         return True
     else:
         return False
@@ -1015,7 +947,7 @@ def quit_game(game):
     os.system('cls' if os.name == 'nt' else 'clear')
     return
 
-# The shop to buy items and level ups
+# TheDoodleShop™
 def shop(game):
     # Format (name, cost, level)
 
@@ -1075,7 +1007,7 @@ def shop(game):
     current_weapon_stats = {name: stats for name, stats in weapon_stats.items() if stats[0] in [item[0] for item in current_items]}
 
     print()
-    typewriter("Welcome to the Doodle Shop!", style.BOLD)
+    typewriter("Welcome to TheDoodleShop™!", style.BOLD)
     typewriter("You can find an assortment of items and weapons here.", style.BOLD)
     typewriter("Feel free to browse and make a purchase!", style.BOLD)
     typewriter("You will find more items in this shop the more you level up!", style.BOLD)
