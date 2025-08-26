@@ -1167,6 +1167,10 @@ def main():
 
             if game['autosave']['enabled']: json_save(game)
 
+            if game == None:
+                typewriter("An error has occurred during the process, Don't panic, resorting to backup save.", style.RED)
+                game = backup_game
+
             if check_game_over(game):
                 if game["autosave"]["enabled"]:
                     game['hp'] = 1
@@ -1192,9 +1196,7 @@ def main():
                     return
                 
             game = level_up_check(game)
-            if game == None:
-                typewriter("An error has occurred during the process, Don't panic, resorting to backup save.", style.RED)
-                game = backup_game
+            
             input("Press Enter to continue > ")
         except KeyboardInterrupt:
             print(f"{style.RED}\n > Game interrupted by user. Try 'QUIT' to exit.{style.RESET}")
