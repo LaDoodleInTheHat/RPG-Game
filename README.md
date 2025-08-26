@@ -15,6 +15,6 @@ You use a command line to explore somewhere, and level up, here are the commands
  - quit (or q) to prompt save and exit
  - autosave (or a) to toggle autosave
 
-Try it by running `rpg-beta-0.3.1.exe`
+Try it by running `rpg-beta-0.4.0.exe`
 
-Also you kinda need python (prefereably the latest version) and it needs to be a path variable. :)
+There is also a `repair-beta-0.4.0.exe` that repairs your save file to the latest version if you have one from earlier
