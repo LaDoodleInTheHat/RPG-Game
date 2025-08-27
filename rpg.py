@@ -5,8 +5,7 @@ Move onto additions.
 
 """
 
-import sys, time, random as r, os, json, math, string
-from bossfights import lv_25_boss_fight
+import sys, time, random as r, os, json, math, string, bossfights
 
 # Styles class for ANSI escape codes for terminal colors and formatting
 class style():
@@ -80,11 +79,11 @@ def init_new_game():
         "cheat_mode": True,
         "xp": 0,
         "skill_set": {
-            "strength": 0,
-            "agility": 0,
-            "luck": 0,
-            "accuracy": 0,
-            "defence": 0
+            "strength": 100,
+            "agility": 100,
+            "luck": 100,
+            "accuracy": 100,
+            "defence": 100
         },
         "used_items": [],
         "autosave": {
@@ -239,9 +238,9 @@ def check_game_over(game):
             game['inventory'].remove("Phoenix's Feather")
         else:    
             print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
-            return True
+            return game, True
     elif game["level"] == 25:
-        game = lv_25_boss_fight(game, lambda b: use_item(b))
+        
         return True
     else:
         return False
@@ -364,6 +363,24 @@ def use_item(game, battle=True):
                         typewriter(f" - {w[0]}: {w[1]}-{w[2]}", style.GREEN, delay=0.01)
                     game["inventory"].remove(item)
                     game["used_items"].append(item)
+                
+                elif item == "Infinity Buff":
+                    game["max_hp"] += round(game["max_hp"]*0.1)
+                    game["skill_set"] = {k: v * 2 for k, v in game["skill_set"].items()}
+
+                    game["inventory"].remove(item)
+                    game["used_items"].append(item)
+                    typewriter("You have used the Infinity Buff and restored your HP to max.", style.GREEN)
+                    typewriter(f"Your HP is now: {game['hp']}/{game['max_hp']}", style.GREEN)
+                    typewriter("Your skills have been doubled:", style.GREEN)
+                    for skill, value in game["skill_set"].items():
+                        typewriter(f" - {skill}: {value}", style.GREEN)
+
+                elif item == "Infinity Heal":
+                    game["max_hp"] *= 2
+                    game["hp"] = game["max_hp"]
+                    game["inventory"].remove(item)
+                    typewriter("You have used the Infinity Heal and restored your HP to max.", style.GREEN)
 
         else:
             typewriter("Invalid choice.", style.RED)
@@ -647,19 +664,6 @@ def random_encounter(game):
             ["Angry Cyclops", 588, 112, 259, 90, 269],
             ["Shadow Elemental", 578, 108, 251, 100, 261],
         ],
-        # Level 10
-        [
-            ["Thunder Lizard", 660, 120, 280, 10, 290],
-            ["Shadow Assassin", 680, 124, 290, 20, 300],
-            ["Giant", 700, 128, 300, 30, 310],
-            ["Storm Hawk", 670, 122, 285, 40, 295],
-            ["Bandit King", 690, 126, 295, 50, 305],
-            ["Forest Giant", 675, 123, 288, 60, 298],
-            ["Wild Buffalo", 685, 125, 292, 70, 302],
-            ["Cave Giant", 665, 121, 283, 80, 293],
-            ["Angry Giant", 678, 124, 289, 90, 299],
-            ["Thunder Elemental", 668, 120, 281, 100, 291],
-        ],
         # Level 11
         [
             ["Hellhound", 750, 132, 310, 10, 320],
@@ -725,11 +729,12 @@ def random_encounter(game):
 
     ]
 
-    # Adjust monster chances based on level
-
     i = r.randint(0, 100)
-
-    if i <= max(43, 89 - 2*game['level']):
+    
+    if game["level"] == 10:
+        typewriter(f"This Bossfight is in commeroration of James/Yammy/Cookiemonster 🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡", style.BLUE, 0.01, 3)
+        pass
+    elif i <= max(43, 89 - 2*game['level']):
         # Monster fight
         i = r.randint(0, 100)
         for monster in monsters[game['level'] - 1]:
@@ -752,7 +757,7 @@ def random_encounter(game):
                     if qu == "run":
                         if r.randint(0, 100) < 75 - 3*game['level']+5*game['skill_set']['agility']:
                             typewriter("You successfully ran away!", style.GREEN)
-                            return game
+                            break
                         else:
                             typewriter("You failed to escape!", style.RED)
                             if monster[1] > 0:
@@ -819,7 +824,6 @@ def random_encounter(game):
                     game["xp"] += monster[5]
 
                 time.sleep(3)
-                return game           
 
     elif i <= max(77, 99 - 2*game['level']):
         spinner(2, 0.1)
@@ -830,7 +834,6 @@ def random_encounter(game):
         spinner(2, 0.1)
         typewriter(f"You found {reward} gold!", style.GREEN)
 
-        return game
     
     elif i <= 100:
         # Shopkeeper encounter
@@ -841,44 +844,45 @@ def random_encounter(game):
         
         while True:
             item_costs = {
-                "Pen": 2000,
-                "Infinity Heal": 300,
-                "Infinity Buff" : 300,
-                "Level Up": 300*game["level"]
+                "Pen": 2000*game["level"],
+                "Infinity Heal": 500*game["level"],
+                "Infinity Buff" : 500*game["level"],
+                "Level Up": 500*game["level"]
             }
+
+            items = ["Pen", "Infinity Heal", "Infinity Buff", "Level Up"]
+
             for idx, (item, cost) in enumerate(item_costs.items(), start=1):
                 print(f'{idx}. {item}: {cost} gold')
                 time.sleep(0.1)
 
             typewriter(f"\nGold : {game['gold']}", style.YELLOW)
-            i = input(f"\nPlease pick your choice (remember to type it perfectly, type exit to leave) >>> ").strip()
+            i = input(f"\nPlease pick your choice (#,  type exit to leave) >>> ").strip()
 
             if i == "exit":
                 break
-            elif i == "Level Up":
+            elif items[int(i) - 1] == "Level Up":
                 if game['gold']>= item_costs["Level Up"]:
-                    game["gold"] -= item_costs[i]
+                    game["gold"] -= item_costs["Level Up"]
                     game["level"] += 1
                     typewriter(f"\nYou have leveled up to level {game['level']}!", style.GREEN)
                 else:
                     typewriter(f"\nHow can you not afford this?", style.RED)
                     time.sleep(0.5)
-                    typewriter("It literally says 'Level Up' in the name", style.RED)
-                    time.sleep(0.5)
                     typewriter("Please pay attention of ur gold next time.", style.RED)
-            elif i == "Pen":
+            elif items[int(i) - 1] == "Pen":
                 if game['gold'] >= item_costs["Pen"]:
-                    game['gold'] -= item_costs[i]
+                    game['gold'] -= item_costs["Pen"]
                     game['weapons'].append(pen)
                     typewriter("\nIf you lose this, then I will not be very happy :P", style.GREEN)
                     time.sleep(0.5)
                     typewriter("This Pen is my signature weapon", style.GREEN)
                 else:
                     typewriter(f"\nPoor.", style.RED)
-            elif i in item_costs:
-                if game['gold']>= item_costs[i]:
-                    game["gold"] -= item_costs[i]
-                    game["inventory"].append(i)
+            elif items[int(i) - 1] in item_costs:
+                if game['gold']>= item_costs[items[int(i) - 1]]:
+                    game["gold"] -= item_costs[items[int(i) - 1]]
+                    game["inventory"].append(items[int(i) - 1])
                     typewriter("\nPlease take care of this, it was quite expensive...", style.GREEN)
                 else:
                     typewriter("\nWhy even try, I thought you kept count of taxes man :P", style.RED)
@@ -889,7 +893,8 @@ def random_encounter(game):
             os.system('cls' if os.name == 'nt' else 'clear')
 
         bsvc += 1
-        return game
+    
+    return game
 
 #Noah
 def cozycoder():
@@ -1171,7 +1176,8 @@ def main():
                 typewriter("An error has occurred during the process, Don't panic, resorting to backup save.", style.RED)
                 game = backup_game
 
-            if check_game_over(game):
+            game, state = check_game_over(game)
+            if state:
                 if game["autosave"]["enabled"]:
                     game['hp'] = 1
                     game['level'] = game['level'] // 2
