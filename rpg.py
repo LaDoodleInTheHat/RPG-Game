@@ -240,14 +240,14 @@ def check_game_over(game):
             print(f"\n{style.BOLD}{style.UNDERLINE}{style.RED}GAME OVER!{style.RESET}{style.RED} You have been defeated.{style.RESET}")
             return game, True
     elif game["level"] == 25:
-        
-        return True
+        game = bossfights.lv_25_boss_fight(game)
+        return game, True
     else:
-        return False
+        return game, False
 
 # To use an item
 def use_item(game, battle=True):
-    global mi
+    global mi, nsvc
 
     #m e not code dis bit
     if game['inventory']:
@@ -381,7 +381,17 @@ def use_item(game, battle=True):
                     game["hp"] = game["max_hp"]
                     game["inventory"].remove(item)
                     typewriter("You have used the Infinity Heal and restored your HP to max.", style.GREEN)
+                
+                elif item == "Secret Map":
 
+                    if mi:
+                        if nsvc == 0:
+                            typewriter("woosh *portal* wow so exciting so sjdlfkjlksdjfkljlskdfjkl *sarcasm*", style.YELLOW)
+                            game = cozycoder(game)
+                        else:
+                            game = cozycoder(game)
+                    else:
+                        typewriter("You don't seem to know how to use this item!", style.RED)
         else:
             typewriter("Invalid choice.", style.RED)
     else:
@@ -997,24 +1007,172 @@ def random_encounter(game):
     
     return game
 
-#Noah
-def cozycoder():
+#Noah, script made by noah
+def cozycoder(game):
     global nsvc
     ty = lambda x: typewriter(x, style.YELLOW, post_delay=1)
     tg = lambda x: typewriter(x, style.GREEN, post_delay=1)
     tb = lambda x: typewriter(x, style.BLUE, post_delay=1)
     tr = lambda x: typewriter(x, style.RED, post_delay=1)
 
-    if nsvc == 0:
-        ty("...")
-        time.sleep(1)
-        ty("Hmm...")
-        time.sleep(1)
-        ty("Where to go...")
+    nsvc += 1
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    # Shop inventory
+    shop_items = {
+        "Cube Sword": {"cost": 350, "type": "weapon", "stats": [200, 450]},
+        "Defensive Shield": {"cost": 300, "type": "weapon", "stats": [25, 40]},
+        "Magic Scroll": {"cost": 100, "type": "item"},
+        "Mysterious Trinket": {"cost": 50, "type": "item"}
+    }
+
+    def shopping():
+        while True:
+            print("\nNoah's Shop:")
+            for idx, (item, data) in enumerate(shop_items.items(), start=1):
+                print(f" {idx}. {item}: {data['cost']} gold")
+            print(" type 'exit' to leave Noah's shop.\n")
+            typewriter("Weapon stats:", style.CYAN)
+            print(" Cube Sword [200, 450]")
+            print(" Defensive Shield [25, 40] (better counters + reduces damage)")
+            
+            choice = input("\nWhat would you like to buy? (#) >>> ").strip()
+            if choice.lower() == "exit":
+                tg("Thanks for shopping!")
+                tg("cya!")
+                break
+
+            try:
+                choice = int(choice) - 1
+                if 0 <= choice < len(shop_items):
+                    item_name = list(shop_items.keys())[choice]
+                    data = list(shop_items.values())[choice]
+                    if game["gold"] >= data["cost"]:
+                        game["gold"] -= data["cost"]
+                        if data["type"] == "weapon":
+                            game["weapons"].append([item_name, *data["stats"]])
+                            if item_name == "Cube Sword":
+                                tg("This is my greatest weapon, please take care of it.")
+                            else:
+                                tg("Not sure if you'd call this a weapon, but it'll help!")
+                        else:
+                            game["inventory"].append(item_name)
+                            if item_name == "Magic Scroll":
+                                tg("I got much better prices than that shopkeeper guy.")
+                            else:
+                                tg("No idea what this is, maybe Krivi would know...")
+                    else:
+                        if item_name == "Cube Sword":
+                            tr("Dude. You need more money before I can give this to you.")
+                        elif item_name == "Defensive Shield":
+                            tr("Hah! Guess you're too broke for defense.")
+                        elif item_name == "Magic Scroll":
+                            tr("Dude this is literally the cheaper version of the original???")
+                        else:
+                            tr("DUDE IT'S 50 GOLD!!!!! HOW CAN YOU NOT AFFORD THIS???? just pay")
+                else:
+                    tr("Invalid choice.")
+            except ValueError:
+                tr("Invalid input, enter a number.")
+
+    # === Visit 1 ===
+    if nsvc == 1: 
+        tg("This is Noah's thing, he was my first alpha tester and made this script so don't judge me or noah 🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡. Thank you to noah for contributing time and effort into this game, enjoy!")
+        time.sleep(2)
+        os.system('cls' if os.name == 'nt' else 'clear')
+        ty("hmm...")
+        ty("where to go...")
         tg("Oh!")
-        tg("Hello adventurer!")
-        tg("What brings you here?")
-        spinner()
+        tg("hello adventurer!")
+        tg("what brings you here today?")
+        # Treasure/XP flavor
+        print(" <treasure>, <experience points>")
+        tg("sweet!")
+        tg("well, I'm Noah, this game's alpha tester, and I came here on a quest with my friend Krivi, but we got split up.")
+        tg("do you know krvi?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            tg("ah, I see.")
+            tg("well you probably already know that he lost his hat. can you go bring it back to him?")
+            if "LaDoodle's Hat" not in game["artifacts"]:
+                game["artifacts"].append("LaDoodle's Hat")
+                print(" [+1 hat]")
+            tg("Thanks! come back to me when you give it to him.")
+        else:
+            tg("well krivi's the creator of this game, so he's basically god.")
+            tg("He dropped his hat when we split up.")
+            tg("can you give it back to him?")
+            if "LaDoodle's Hat" not in game["artifacts"]:
+                game["artifacts"].append("LaDoodle's Hat")
+                print(" [+1 hat]")
+            tg("great, come back when you give it back.")
+            tg("oh.")
+            tg("you can't find him, can you?")
+            tg("well, here's a map.")
+            if "Doodle Map" not in game["inventory"]:
+                game["inventory"].append("Doodle Map")
+                print(" [+1 doodle map]")
+        tg("so, while you're here, would you like to do some shopping?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            shopping()
+
+    # === Visit 2 ===
+    elif nsvc == 2:
+        tg("woah what.")
+        tg("I was looting a chest and now i'm… here?")
+        tg("oh, it's you again.")
+        tg("did you give krivi his hat?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            tg("great! i'm sure he'll appreciate it.")
+            print(" +500 gold")
+            game["gold"] += 500
+        else:
+            tr("why not?!?!")
+            tg("uhh, just bring it to him next time.")
+        tg("anyway, wanna do some shopping?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            shopping()
+
+    # === Visit 3 ===
+    elif nsvc == 3:
+        tg("wha…")
+        tg("where am I???")
+        tg("why does this keep happening?")
+        if "LaDoodle's Hat" in game["artifacts"]:
+            tg("did you give krivi the hat yet?")
+            if input(" (y/n) > ").strip().lower() == "y":
+                tg("finally, okay here's some gold.")
+                print(" +300 gold")
+                game["gold"] += 300
+            else:
+                tr("you have one chance remaining. give him the hat or face the consequences")
+        tg("now, shopping?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            shopping()
+        tg("i hope you found what you were looking for...")
+
+    # === Visit 4+ ===
+    else:
+        tg("AH-WUH-HUH????")
+        tg("my GOD")
+        tg("stop teleporting me here.")
+        tg("did you give krivi the hat?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            tg("finally... please just do what i ask the first time next time, okay?")
+            print(" +150 gold")
+            game["gold"] += 150
+        else:
+            print("\nThe ROARING KNIGHT appeared!")
+            tr(" (Scripted battle: takes 1 dmg per hit, deals 999999999 dmg. You lose.) ")
+            game["hp"] = 0
+        tg("okay, now do you want to shop again?")
+        if input(" (y/n) > ").strip().lower() == "y":
+            shopping()
+        tg("okay... hope you found what you wanted...")
+        tg("if not...")
+        tg("just please don't come back here.")
+        tg("i'm not threatening you, but just please don't.")
+
+    return game
 
 # Equip a weapon from the arsenal
 def equip(game):
