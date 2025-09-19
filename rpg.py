@@ -385,15 +385,13 @@ def use_item(game, battle=True):
                 elif item == "Secret Map":
 
                     if mi:
-                        if nsvc == 0:
+                        if nsvc < 1:
                             typewriter("woosh *portal* wow so exciting so sjdlfkjlksdjfkljlskdfjkl *sarcasm*", style.YELLOW)
                             game = cozycoder(game)
                         else:
                             game = cozycoder(game)
                     else:
                         typewriter("You don't seem to know how to use this item!", style.RED)
-        else:
-            typewriter("Invalid choice.", style.RED)
     else:
         typewriter("You don't have anything to use!", style.RED)
 
@@ -841,11 +839,9 @@ def random_encounter(game):
     ]
 
     i = r.randint(0, 100)
+    i = int(input(" >>> ")) if game["cheat_mode"] else i
     
-    if game["level"] == 10:
-        typewriter(f"This Bossfight is in commeroration of James/Yammy/Cookiemonster 🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡🫡", style.BLUE, 0.01, 3)
-        pass
-    elif i <= max(43, 89 - 2*game['level']):
+    if i <= max(43, 89 - 2*game['level']):
         # Monster fight
         i = r.randint(0, 100)
         for monster in monsters[game['level'] - 1]:
